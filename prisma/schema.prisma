@@ -10,6 +10,37 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  name String 
+  email String @unique 
+  
+}
+
+model ChatBot {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  name String
+  
+
+}
+
+model ChatBotProfile {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  image String?
+}
+
+model ChattingRoom {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+}
+
+model Chat {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 }
