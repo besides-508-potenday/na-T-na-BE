@@ -13,6 +13,19 @@ docker-compose up -d
 yarn install
 ```
 
+- 연결된 데이터베이스에 prisma ORM 반영하기
+
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+- 초기 챗봇(투닥이) 데이터 초기셋팅
+
+```bash
+npx prisma db seed
+```
+
 ## Compile and run the project
 
 ```bash
