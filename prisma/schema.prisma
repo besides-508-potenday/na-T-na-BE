@@ -15,31 +15,110 @@ datasource db {
 
 model User {
   id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
-  name String 
-  email String @unique 
-  
+  nickname String
+  created_at DateTime @default(now())  
+
+  // 외래키 관계
+  chatroom_participants ChatroomParticipant[] // 1:N
+  messages ChatMessage[] // 1:N
 }
 
-model ChatBot {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
-  name String
-  
+model Chatbot {
+  id BigInt @id @default(autoincrement())
+  name String @unique
+  speciality String 
+  created_at DateTime @default(now())  
 
+  // 외래키 관계
+  personalities ChatbotPersonality[] @relation("chatbot_to_personality")
+  chatroom_participants ChatroomParticipant[] // 1:N
+  messages ChatMessage[] // 1:N
 }
 
-model ChatBotProfile {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
-  image String?
+model Personality {
+  id BigInt @id @default(autoincrement())
+  name String @unique
+
+  // 외래키 관계
+  chatbots ChatbotPersonality[] @relation("personality_to_chatbot")
 }
 
-model ChattingRoom {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+/* 챗봇/성격 연결 테이블 */
+model ChatbotPersonality {
+  id BigInt @id @default(autoincrement())
+  chatbot_id BigInt
+  personality_id BigInt
+
+  // 외래키
+  chatbot Chatbot @relation(fields: [chatbot_id],references: [id], name: "chatbot_to_personality")
+  personality Personality @relation(fields: [personality_id], references: [id], name: "personality_to_chatbot")
 }
 
-model Chat {
+
+model Chatroom {
   id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+
+  is_finished Boolean @default(false)
+  current_distance Int @default(10)
+  heart_life Int @default(10)
+  letter String
+  turn_count Int @default(10)
+  created_at DateTime @default(now())
+
+  // 외래키 관계
+  participants ChatroomParticipant[] // 1:N
+  quizes Quiz[] // 1:N
+  messages ChatMessage[] // 1:N
+}
+
+/* 채팅방 참여인원 - 채팅방/챗봇/유저 연결 테이블 */
+model ChatroomParticipant {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+
+  // FK 컬럼
+  chatroom_id Bytes
+  user_id Bytes
+  chatbot_id BigInt
+
+  // 외래키 관계
+  chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+  chatbot Chatbot @relation(fields: [chatbot_id], references: [id])
+}
+
+
+model ChatMessage {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+
+  sender_type SenderType @default(USER)
   content String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
+
+
+  // FK 컬럼
+  chatroom_id Bytes
+  chatbot_id BigInt
+  user_id Bytes
+
+  // 외래키 관계
+  chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
+  chatbot Chatbot @relation(fields: [chatbot_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum SenderType {
+  USER
+  BOT
+}
+
+model Quiz {
+  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+
+  sequence Int
+  quiz String
+  createdAt DateTime @default(now())
+
+  // 외래키 관계
+  chatroom_id Bytes
+  chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
 }
