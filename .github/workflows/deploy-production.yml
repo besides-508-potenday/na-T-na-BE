@@ -7,9 +7,9 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: na-t-na-be
-  ECS_SERVICE: na-t-na-be
   ECS_CLUSTER: na-t-na-be-ecs-cluster
-  ECS_TASK_DEFINITION: .aws/task-definition.json
+  ECS_SERVICE: na-t-na-be-production-service
+  ECS_TASK_DEFINITION: na-t-na-production-taskdef
   CONTAINER_NAME: na-t-na-be-production
 
 jobs:
@@ -132,18 +132,18 @@ jobs:
           fi
           echo "👍 Deployment successful!"
 
-      # - name: Get service Endpoint
-      #   run: |
-      #     # ALB DNS 이름 가져오기
-      #     LOAD_BALANCER=$(aws ecs describe-services \
-      #       --cluster ${{ env.ECS_CLUSTER }} \
-      #       --services ${{ env.ECS_SERVICE }} \
-      #       --query 'services[0].loadBalancers[0].targetGroupArn' \
-      #       --output text)
+      - name: Get service Endpoint
+        run: |
+          # ALB DNS 이름 가져오기
+          LOAD_BALANCER=$(aws ecs describe-services \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }} \
+            --query 'services[0].loadBalancers[0].targetGroupArn' \
+            --output text)
 
-      #     if [ "$LOAD_BALANCER" != "None" ] && [ "$LOAD_BALANCER" != "" ]; then
-      #       echo "🌐 Service is accessible via Load Balancer"
-      #     fi
+          if [ "$LOAD_BALANCER" != "None" ] && [ "$LOAD_BALANCER" != "" ]; then
+            echo "🌐 Service is accessible via Load Balancer"
+          fi
 
   # 3단계: 디스코드 알림
   notify_discord:
@@ -187,32 +187,32 @@ jobs:
           username: 'GitHub Actions'
           avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
 
-  # # 4단계: 스모크 테스트 (배포 후 검증)
-  # smoke-test:
-  #   name: Smoke Test
-  #   runs-on: ubuntu-latest
-  #   needs: deploy
+  # 4단계: 스모크 테스트 (배포 후 검증)
+  smoke-test:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    needs: deploy
 
-  #   steps:
-  #     - name: Wait for deployment stabilization
-  #       run: sleep 60
+    steps:
+      - name: Wait for deployment stabilization
+        run: sleep 60
 
-  #     - name: Health Check
-  #       run: |
-  #         # 헬스체크 엔드포인트 테스트
-  #         # ALB 엔드포인트가 있다면 해당 주소로 테스트
-  #         echo "🔍 Running smoke tests..."
+      - name: Health Check
+        run: |
+          # 헬스체크 엔드포인트 테스트
+          # ALB 엔드포인트가 있다면 해당 주소로 테스트
+          echo "🔍 Running smoke tests..."
 
-  #         # 예시: 만약 ALB 엔드포인트가 환경변수로 설정되어 있다면
-  #         if [ -n "${{ secrets.APP_ENDPOINT }}" ]; then
-  #           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_ENDPOINT }}/health")
+          # 예시: 만약 ALB 엔드포인트가 환경변수로 설정되어 있다면
+          if [ -n "${{ secrets.APP_ENDPOINT }}" ]; then
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_ENDPOINT }}/health")
 
-  #           if [ "$RESPONSE" = "200" ]; then
-  #             echo "✅ Health check passed!"
-  #           else
-  #             echo "❌ Health check failed with status: $RESPONSE"
-  #             exit 1
-  #           fi
-  #         else
-  #           echo "⚠️ No endpoint configured for smoke test"
-  #         fi
+            if [ "$RESPONSE" = "200" ]; then
+              echo "✅ Health check passed!"
+            else
+              echo "❌ Health check failed with status: $RESPONSE"
+              exit 1
+            fi
+          else
+            echo "⚠️ No endpoint configured for smoke test"
+          fi

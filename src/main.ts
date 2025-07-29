@@ -1,13 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Rest API 설정
   app.setGlobalPrefix('api');
-  app.enableCors();
+
+  const corsOptions: CorsOptions = {
+    origin: '*', // 모든 도메인에서 접근 허용
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // 허용할 HTTP 메소드
+    allowedHeaders: 'Content-Type, Accept', // 허용할 헤더
+  };
+  // CORS 설정
+  app.enableCors(corsOptions);
+
+  // Socket 어뎁터 연결
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Swagger 설정
   const swaggerConfig = new DocumentBuilder()

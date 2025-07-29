@@ -14,7 +14,7 @@ datasource db {
 }
 
 model User {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  id String @id @default(uuid())
   nickname String
   created_at DateTime @default(now())  
 
@@ -56,7 +56,7 @@ model ChatbotPersonality {
 
 
 model Chatroom {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  id String @id @default(uuid())
 
   is_finished Boolean @default(false)
   current_distance Int @default(10)
@@ -73,11 +73,11 @@ model Chatroom {
 
 /* 채팅방 참여인원 - 채팅방/챗봇/유저 연결 테이블 */
 model ChatroomParticipant {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  id String @id @default(uuid())
 
   // FK 컬럼
-  chatroom_id Bytes
-  user_id Bytes
+  chatroom_id String
+  user_id String
   chatbot_id BigInt
 
   // 외래키 관계
@@ -88,7 +88,7 @@ model ChatroomParticipant {
 
 
 model ChatMessage {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  id String @id @default(uuid())
 
   sender_type SenderType @default(USER)
   content String
@@ -96,9 +96,9 @@ model ChatMessage {
 
 
   // FK 컬럼
-  chatroom_id Bytes
+  chatroom_id String
   chatbot_id BigInt
-  user_id Bytes
+  user_id String
 
   // 외래키 관계
   chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
@@ -112,13 +112,13 @@ enum SenderType {
 }
 
 model Quiz {
-  id Bytes @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  id String @id @default(uuid()) 
 
   sequence Int
   quiz String
   createdAt DateTime @default(now())
 
   // 외래키 관계
-  chatroom_id Bytes
+  chatroom_id String
   chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
 }
