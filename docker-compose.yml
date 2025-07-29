@@ -1,0 +1,32 @@
+services:
+  # Mysql
+  mysql:
+    image: mysql:8.0
+    container_name: potenday_508_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+  # Redis
+  redis:
+    image: redis
+    restart: unless-stopped
+    container_name: potenday_508_redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  default:
+    driver: bridge
