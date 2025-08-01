@@ -16,16 +16,23 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('mock')
     .build();
+
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
       // 목서버 활성화를 위한 옵션
       tryItOutEnabled: true, // Swagger UI에서 API를 직접 호출할 수 있도록 활성화
-      // persistAuthorization: true, // Swagger UI에서 인증정보를 브라우저에 저장. 새로고침해도 jwt토큰, api 키등이 유지됨.
+      requestInterceptor: (request: { headers: Record<string, string> }) => {
+        request.headers['x-requested-with'] = 'swagger-ui'; // Swagger UI에서 요청을 보낼 때 필요한 헤더 설정'
+        return request;
+      },
     },
   });
 
   await app.listen(3000);
   console.log(`🤡 Mock Server running on: http://localhost:3000/api-docs`);
+  console.log(
+    `Swagger UI에서 'try it out' 버튼을 클릭하여 API를 테스트할 수 있습니다.`,
+  );
 }
 bootstrap();
