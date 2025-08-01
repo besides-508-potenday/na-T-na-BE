@@ -22,6 +22,9 @@
     "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch",
     "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config ./test/jest-e2e.json --runInBand"
   },
+  "prisma": {
+    "seed": "ts-node --esm prisma/first-chatbot-seeds.ts"
+  },
   "dependencies": {
     "@nestjs-modules/ioredis": "^2.0.2",
     "@nestjs/common": "^11.0.1",
@@ -33,6 +36,8 @@
     "@nestjs/websockets": "^11.1.5",
     "@prisma/client": "^6.13.0",
     "@prisma/extension-accelerate": "^2.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
     "ioredis": "^5.7.0",
     "mo": "^1.7.3",
     "prisma": "^6.13.0",
