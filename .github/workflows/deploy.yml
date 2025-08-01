@@ -1,0 +1,18 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: na-t-na-be
+  ECS_SERVICE: na-t-na-be
+  ECS_CLUSTER: na-t-na-production-cluster
+  ECS_TASK_DEFINITION: .aws/task-definition.json
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
