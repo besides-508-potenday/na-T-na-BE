@@ -10,7 +10,7 @@ global.setImmediate =
   ((fn: (...args: any[]) => void, ...args: any[]) =>
     global.setTimeout(fn, 0, ...args));
 
-jest.setTimeout(60000); // 60초로 타임아웃 설정
+jest.setTimeout(100000);
 
 // 콘솔 로그 레벨 설정 (선택사항)
 if (process.env.NODE_ENV === 'test') {

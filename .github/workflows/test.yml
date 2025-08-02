@@ -36,6 +36,7 @@ jobs:
         run: yarn test:e2e
         env:
           NODE_ENV: test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Upload coverage reports
         if: success()

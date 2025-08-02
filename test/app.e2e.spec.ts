@@ -12,8 +12,11 @@ describe('AppController (e2e)', () => {
 
   beforeAll(async () => {
     console.log('🔧 Setting up NestJS application...');
+    // 테스트컨테이너 정의
+    const dbUrl = await TEST_DB.start();
+    process.env.DATABASE_URL = dbUrl;
 
-    // 컨테이너는 이미 시작된 상태에서, Nestjs 애플리케이션 실행
+    // Nestjs 애플리케이션 실행
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();

@@ -9,7 +9,7 @@
   "setupFilesAfterEnv": ["./setup-e2e.ts"],
   "globalSetup": "./global-setup.ts",
   "globalTeardown": "./global-teardown.ts",
-  "testTimeout": 60000,
+  "testTimeout": 100000,
   "maxWorkers": 1,
   "forceExit": true,
   "detectOpenHandles": true,

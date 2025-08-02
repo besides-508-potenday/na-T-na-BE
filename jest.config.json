@@ -17,5 +17,6 @@
     "^src/(.*)$": "<rootDir>/src/$1",
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@test/(.*)$": "<rootDir>/test/$1"
-  }
+  },
+  "testTimeout": 100000
 }
