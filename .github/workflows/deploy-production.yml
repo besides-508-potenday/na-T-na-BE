@@ -1,0 +1,218 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: na-t-na-be
+  ECS_SERVICE: na-t-na-be
+  ECS_CLUSTER: na-t-na-be-ecs-cluster
+  ECS_TASK_DEFINITION: .aws/task-definition.json
+  CONTAINER_NAME: na-t-na-be-production
+
+jobs:
+  # 1단계: 테스트
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test
+
+      - name: Run e2e tests
+        run: yarn test:e2e
+
+  # 2단계: 빌드 & 배포
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract metadata from Docker
+        id: metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest
+            type=raw,value=production
+
+      - name: Build and push Docker image
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{steps.metadata.outputs.labels}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Get Latest image URI
+        id: image-uri
+        run: |
+          IMAGE_URI="${{ steps.ecr-login.outputs.registry}}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+          echo "IMAGE_URI=${IMAGE_URI}" >> $GITHUB_OUTPUT
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{env.ECS_SERVICE}} \
+            --query 'taskDefinition' > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{env.CONTAINER_NAME }}
+          image: ${{ steps.image-uri.outputs.IMAGE_URI }}
+
+      - name: Deploy Amazon ECS task definition
+        id: deploy-ecs
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+          wait-for-minutes: 10
+
+      - name: Verify Deployment
+        run: |
+          # 서비스 상태 확인 
+          SERVICE_STATUS=$(aws ecs describe-services \ 
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }} \
+            --query 'services[0].deployments[?status==`PRIMARY`].status' \ 
+            --output text)
+
+          echo "Service deployment Status: $SERVICE_STATUS"
+
+          if [ "$SERVICE_STATUS" != "STEADY" ]; then
+            echo "❌ Deployment failed or still in progress."
+            exit 1        
+          fi
+          echo "👍 Deployment successful!"
+
+      # - name: Get service Endpoint
+      #   run: |
+      #     # ALB DNS 이름 가져오기
+      #     LOAD_BALANCER=$(aws ecs describe-services \
+      #       --cluster ${{ env.ECS_CLUSTER }} \
+      #       --services ${{ env.ECS_SERVICE }} \
+      #       --query 'services[0].loadBalancers[0].targetGroupArn' \
+      #       --output text)
+
+      #     if [ "$LOAD_BALANCER" != "None" ] && [ "$LOAD_BALANCER" != "" ]; then
+      #       echo "🌐 Service is accessible via Load Balancer"
+      #     fi
+
+  # 3단계: 디스코드 알림
+  notify_discord:
+    name: Notify Discord Channel
+    runs-on: ubuntu-latest
+    needs: [test, deploy]
+    if: always()
+    steps:
+      - name: Send Discord Notification
+        if: needs.deploy.result == 'success'
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          username: 'GitHub Actions'
+          content: |
+            **Deployment Status**: ${{ job.status }}
+            **Branch**: ${{ github.ref }}
+            **Commit**: ${{ github.sha }}
+            **Repository**: ${{ github.repository }}
+            **Deployed by**: ${{ github.actor }}
+
+            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          color: '3066993' # Green color for success
+          avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
+
+      - name: Send Discord notification on failure
+        if: needs.test.result == 'failure' || needs.deploy.result == 'failure'
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: '❌ Production Deployment Failed!'
+          description: |
+            **Repository:** ${{ github.repository }}
+            **Branch:** ${{ github.ref_name }}
+            **Commit:** `${{ github.sha }}`
+            **Author:** ${{ github.actor }}
+            **Failed Job:** ${{ needs.test.result == 'failure' && 'Tests' || 'Deploy' }}
+
+            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          color: '15158332' # Red color for failure
+          username: 'GitHub Actions'
+          avatar_url: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'
+
+  # # 4단계: 스모크 테스트 (배포 후 검증)
+  # smoke-test:
+  #   name: Smoke Test
+  #   runs-on: ubuntu-latest
+  #   needs: deploy
+
+  #   steps:
+  #     - name: Wait for deployment stabilization
+  #       run: sleep 60
+
+  #     - name: Health Check
+  #       run: |
+  #         # 헬스체크 엔드포인트 테스트
+  #         # ALB 엔드포인트가 있다면 해당 주소로 테스트
+  #         echo "🔍 Running smoke tests..."
+
+  #         # 예시: 만약 ALB 엔드포인트가 환경변수로 설정되어 있다면
+  #         if [ -n "${{ secrets.APP_ENDPOINT }}" ]; then
+  #           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_ENDPOINT }}/health")
+
+  #           if [ "$RESPONSE" = "200" ]; then
+  #             echo "✅ Health check passed!"
+  #           else
+  #             echo "❌ Health check failed with status: $RESPONSE"
+  #             exit 1
+  #           fi
+  #         else
+  #           echo "⚠️ No endpoint configured for smoke test"
+  #         fi
