@@ -18,12 +18,16 @@ export default async (): Promise<void> => {
       env: { ...process.env, DATABASE_URL: databaseUrl },
     });
 
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+
     await TEST_DB.reset();
 
     execSync('npx prisma db push', {
       env: { ...process.env, DATABASE_URL: databaseUrl },
       stdio: 'inherit',
     });
+
+    execSync('npx prisma db seed', { stdio: 'inherit' });
 
     console.log('✅ Database schema initialized');
   } catch (error) {

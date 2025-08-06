@@ -24,7 +24,7 @@ model User {
 }
 
 model Chatbot {
-  id BigInt @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   name String @unique
   speciality String 
   created_at DateTime @default(now())  
@@ -36,7 +36,7 @@ model Chatbot {
 }
 
 model Personality {
-  id BigInt @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   name String @unique
 
   // 외래키 관계
@@ -45,9 +45,9 @@ model Personality {
 
 /* 챗봇/성격 연결 테이블 */
 model ChatbotPersonality {
-  id BigInt @id @default(autoincrement())
-  chatbot_id BigInt
-  personality_id BigInt
+  id Int @id @default(autoincrement())
+  chatbot_id Int
+  personality_id Int
 
   // 외래키
   chatbot Chatbot @relation(fields: [chatbot_id],references: [id], name: "chatbot_to_personality")
@@ -78,7 +78,7 @@ model ChatroomParticipant {
   // FK 컬럼
   chatroom_id String
   user_id String
-  chatbot_id BigInt
+  chatbot_id Int
 
   // 외래키 관계
   chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
@@ -97,7 +97,7 @@ model ChatMessage {
 
   // FK 컬럼
   chatroom_id String
-  chatbot_id BigInt
+  chatbot_id Int
   user_id String
 
   // 외래키 관계

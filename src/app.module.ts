@@ -15,6 +15,7 @@ import { ChatroomsModule } from './chatrooms/chatrooms.module';
 import { PersonalitiesModule } from './personalities/personalities.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { RedisService } from './redis/redis.service';
+import { PrismaService } from './prisma/prisma.service';
 
 @Module({
   imports: [
@@ -42,7 +43,8 @@ import { RedisService } from './redis/redis.service';
     AppService,
     SwaggerMockInterceptor, // Swagger Mock 인터셉터
     SwaggerMockApiService,
-    RedisService, // Swagger UI 에서만 사용되는  Mock API 서비스
+    RedisService,
+    // Swagger UI 에서만 사용되는  Mock API 서비스
   ],
 })
 export class AppModule {}
