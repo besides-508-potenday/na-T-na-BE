@@ -1,3 +1,6 @@
+# AWS
+AWSCLIV2.pkg
+
 # compiled output
 /dist
 /node_modules
@@ -42,6 +45,7 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+
 # temp directory
 .temp
 .tmp
@@ -54,5 +58,7 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+/generated/prisma
 
 /generated/prisma
