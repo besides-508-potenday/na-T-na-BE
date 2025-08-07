@@ -2,8 +2,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  // 1. 챗봇 생성
+async function activeChatbot() {
   const firstChatbot = await prisma.chatbot.upsert({
     where: { name: '투닥이' },
     update: {},
@@ -13,7 +12,6 @@ async function main() {
     },
   });
 
-  // 2. 성격 4개 데이터
   const personalityNames: string[] = ['소심함', '감정 과몰입', '인정 욕구', '관계 중심 정서'];
 
   const personalities = await Promise.all(
@@ -26,7 +24,6 @@ async function main() {
     ),
   );
 
-  // 3. 챗봇성격 데이터 생성
   await Promise.all(
     personalities.map((personality) =>
       prisma.chatbotPersonality.create({
@@ -39,12 +36,53 @@ async function main() {
   );
 }
 
-main()
-.then(
-  async() => {await prisma.$disconnect();
-})
-.catch(async (error)=> {
-  console.error(`❌ error during seeding: ${error}`);
-  await prisma.$disconnect();
-  process.exit(1);
-});
+// 2. 공개되지 않은 2개의 챗봇
+async function unknownChatbots() {
+  const chatbots = [
+    {
+      name: '썸고수_???',
+      speciality: '연애 공감 시뮬레이션',
+    },
+    {
+      name: '사회선배_???',
+      speciality: '직장 내 감정소통 연습',
+    },
+  ];
+
+  // 챗봇생성
+  await Promise.all(
+    chatbots.map((chatbot) =>
+      prisma.chatbot.upsert({
+        where: { name: chatbot.name },
+        update: {},
+        create: {
+          name: chatbot.name,
+          speciality: chatbot.speciality,
+          is_unknown: true,
+        },
+      }),
+    ),
+  );
+}
+
+// 1. 활성 챗봇: 투닥이
+activeChatbot()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (error) => {
+    console.error(`❌ error during seeding: ${error}`);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
+
+// 2. 미공개 챗봇 2개
+unknownChatbots()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (error) => {
+    console.error(`❌ error during seeding: ${error}`);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
