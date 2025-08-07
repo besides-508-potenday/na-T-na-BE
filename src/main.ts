@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +21,11 @@ async function bootstrap() {
 
   // Socket 어뎁터 연결
   app.useWebSocketAdapter(new IoAdapter(app));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
 
   // Swagger 설정
   const swaggerConfig = new DocumentBuilder()
@@ -43,8 +49,6 @@ async function bootstrap() {
 
   await app.listen(3000);
   console.log(`🤡 Mock Server running on: http://localhost:3000/api-docs`);
-  console.log(
-    `Swagger UI에서 'try it out' 버튼을 클릭하여 API를 테스트할 수 있습니다.`,
-  );
+  console.log(`Swagger UI에서 'try it out' 버튼을 클릭하여 API를 테스트할 수 있습니다.`);
 }
 bootstrap();
