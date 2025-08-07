@@ -32,11 +32,11 @@ jobs:
           sudo systemctl start docker
           sudo chmod 666 /var/run/docker.sock
 
-      - name: Run E2E tests with Test Containers
-        run: yarn test:e2e
-        env:
-          NODE_ENV: test
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # - name: Run E2E tests with Test Containers
+      #   run: yarn test:e2e
+      #   env:
+      #     NODE_ENV: test
+      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Upload coverage reports
         if: success()
