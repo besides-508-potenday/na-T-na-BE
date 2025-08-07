@@ -63,6 +63,7 @@ describe('ChatbotsService', () => {
       'https://na-t-na-s3.s3.ap-northeast-2.amazonaws.com/chatbots/2/unknown.png',
     );
     expect(result[1].is_unknown).toBe(true);
+    expect(result[1].chatbot_personalities).toBeNull();
 
     expect(chatbotRepository.getChatbots).toHaveBeenCalled();
   });
