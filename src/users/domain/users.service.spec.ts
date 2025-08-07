@@ -19,6 +19,10 @@ describe('UsersService', () => {
     userRepository = module.get<typeof mockUserRepositoryImpl>('IUserRepository');
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('createUser(): 유저 생성할 수 있다', () => {
     const nickname = '투닥이';
     const mockUser = { id: 'test-uuid', nickname: nickname };

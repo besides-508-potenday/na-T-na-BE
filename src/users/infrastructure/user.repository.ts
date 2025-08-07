@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { IUserRepository } from '../domain/user.repository.interface';
 import { User } from '@prisma/client';
 
