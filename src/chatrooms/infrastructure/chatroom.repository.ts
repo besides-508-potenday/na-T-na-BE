@@ -55,6 +55,16 @@ export class ChatroomRepositoryImpl implements IChatroomRepository {
       where: {
         id: chatroomId,
       },
+      include: {
+        participants: {
+          include: {
+            user: true,
+            chatbot: true,
+          },
+        },
+        quizes: true,
+        messages: true,
+      },
     });
   }
 

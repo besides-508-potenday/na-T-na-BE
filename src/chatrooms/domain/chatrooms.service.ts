@@ -11,6 +11,11 @@ export class ChatroomsService {
     @Inject('IChatroomRepository') private readonly chatroomRepository: IChatroomRepository,
   ) {}
 
+  async getChatroomById(chatroomId: string) {
+    const chatroom = await this.chatroomRepository.findChatroomById(chatroomId);
+    return chatroom;
+  }
+
   async createChatroom(userId: string, chatbotId: number) {
     // 채팅방 insert
     const chatroom = await this.chatroomRepository.createChatroom();
@@ -24,11 +29,11 @@ export class ChatroomsService {
   /**
    * 부정적인 반응일경우 (score = 0)
    * - current_distance: 그대로 유지
-   * - heart_distance: 1씩 감소
+   * - heart_life: 1씩 감소
    *
    * 긍정적인 반응일경우 (score = 1)
    * - current_distance: 1씩 감소
-   * - heart_distance: 그대로 유지
+   * - heart_life: 그대로 유지
    *
    * 공통
    * - turn_count: 1씩감소
