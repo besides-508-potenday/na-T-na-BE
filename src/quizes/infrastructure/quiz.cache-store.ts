@@ -1,12 +1,12 @@
 import { RedisService } from '../../redis/redis.service';
 import QuizList from '../domain/quiz-list.type';
-import { IQuizCacheStore } from '../domain/quiz.cache-store.interface';
-import { REDIS_QUIZ_LIST_KEY } from '../domain/quiz.repository.interface';
+import { IQuizCacheStore, REDIS_QUIZ_LIST_KEY } from '../domain/quiz.cache-store.interface';
 
 export class QuizCacheStoreImpl implements IQuizCacheStore {
   constructor(private readonly redis: RedisService) {}
 
-  async getQuizList(key: string): Promise<QuizList | null> {
+  async getQuizList(chatroomId: string): Promise<QuizList | null> {
+    const key = REDIS_QUIZ_LIST_KEY(chatroomId);
     const result = await this.redis.getJson<QuizList>(key);
     if (result && Array.isArray(result)) {
       return result;

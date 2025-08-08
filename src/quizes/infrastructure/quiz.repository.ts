@@ -4,6 +4,28 @@ import { IQuizRepository } from '../domain/quiz.repository.interface';
 
 export class QuizRepositoryImpl implements IQuizRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async updateQuiz(
+    chatroomId: string,
+    targetSequence: number,
+    improvedQuiz: string,
+  ): Promise<QuizList> {
+    // 퀴즈업데이트
+    await this.prisma.quiz.update({
+      where: {
+        chatroom_id_sequence: {
+          chatroom_id: chatroomId,
+          sequence: targetSequence,
+        },
+      },
+      data: {
+        quiz: improvedQuiz,
+      },
+    });
+
+    // 업데이트후 퀴즈리스트를 불러온다.
+    return await this.getQuizList(chatroomId);
+  }
   async getQuizList(chatroomId: string): Promise<QuizList> {
     const result = await this.prisma.quiz.findMany({
       select: {
