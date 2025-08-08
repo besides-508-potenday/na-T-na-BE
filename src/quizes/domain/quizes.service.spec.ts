@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QuizesService } from './quizes.service';
 import QuizList from './quiz-list.type';
-import { REDIS_QUIZ_LIST_KEY } from './quiz.repository.interface';
 import { ResourceNotFoundException } from '../../common/custom-exceptions/base-custom-exception';
+import { REDIS_QUIZ_LIST_KEY } from './quiz.cache-store.interface';
 
 const mockQuizRepository = {
   saveQuizList: jest.fn(),
   getQuizList: jest.fn(),
+  updateQuiz: jest.fn(),
 };
 
 const mockQuizCacheStore = {
@@ -39,6 +40,49 @@ describe('QuizesService', () => {
     quizCacheStore = module.get('IQuizCacheStore');
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('updateQuiz', () => {
+    it('targetSequence(1,2,...,10)에 해당되는 퀴즈의 내용은 새로운퀴즈(improvedQuiz)로 변경되며, 데이터베이스와 캐시저장소에서도 변경이 반영된다', async () => {
+      // arrange
+      const chatroomId = 'test-chatroom-uuid';
+      const targetSequence = 2;
+      const improvedQuiz = '새로운 내용의 퀴즈';
+      const originalQuizList: QuizList = Array.from({ length: 10 }, (_, i) => ({
+        quiz: `기존퀴즈 ${i + 1}`,
+        sequence: i + 1,
+      }));
+      const updatedQuizList: QuizList = originalQuizList.map((quiz, idx) =>
+        idx === targetSequence - 1 ? { ...quiz, quiz: improvedQuiz } : quiz,
+      );
+
+      // DB에서 updateQuiz가 호출되면 변경된 리스트를 반환하도록 mock
+      quizRepository.updateQuiz.mockResolvedValue(updatedQuizList);
+      quizCacheStore.saveQuizListAtCacheStore.mockResolvedValue(updatedQuizList);
+
+      // act
+      await service.updateQuiz({
+        chatroomId: chatroomId,
+        targetSequence: targetSequence,
+        improvedQuiz: improvedQuiz,
+      });
+
+      // assert
+      expect(quizRepository.updateQuiz).toHaveBeenCalledWith(
+        chatroomId,
+        targetSequence,
+        improvedQuiz,
+      );
+      expect(quizCacheStore.saveQuizListAtCacheStore).toHaveBeenCalledWith(
+        chatroomId,
+        updatedQuizList,
+      );
+      expect(updatedQuizList[targetSequence - 1].quiz).toBe(improvedQuiz);
+    });
+  });
+
   describe('getQuizList', () => {
     it('채팅방에 퀴즈리스트가 이미 캐시저장소에 있으면 불러온다.', async () => {
       // arrange
@@ -53,8 +97,7 @@ describe('QuizesService', () => {
       const result = await service.getQuizList(chatroomId);
 
       // assert
-      const key = REDIS_QUIZ_LIST_KEY(chatroomId);
-      expect(quizCacheStore.getQuizList).toHaveBeenCalledWith(key);
+      expect(quizCacheStore.getQuizList).toHaveBeenCalledWith(chatroomId);
       expect(result).toEqual(quizListOutput);
       expect(quizRepository.getQuizList).toHaveBeenCalledTimes(0);
     });
@@ -74,8 +117,7 @@ describe('QuizesService', () => {
       const result = await service.getQuizList(chatroomId);
 
       // assert
-      const key = REDIS_QUIZ_LIST_KEY(chatroomId);
-      expect(quizCacheStore.getQuizList).toHaveBeenCalledWith(key);
+      expect(quizCacheStore.getQuizList).toHaveBeenCalledWith(chatroomId);
       expect(quizRepository.getQuizList).toHaveBeenCalledWith(chatroomId);
       expect(result).toEqual(quizListOutput);
     });
@@ -90,7 +132,7 @@ describe('QuizesService', () => {
     });
   });
 
-  describe('saveQuizList', () => {
+  describe('initializedQuizList', () => {
     it('퀴즈 리스트 10개 저장에 성공한다', async () => {
       // arrange
       const chatroomId = 'test-chatroom-uuid';
