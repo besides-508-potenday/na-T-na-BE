@@ -7,9 +7,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ExternalApiModule } from '../external-api/external-api.module';
 import { ChatbotsModule } from '../chatbots/chatbots.module';
 import { ChatroomRepositoryImpl } from './infrastructure/chatroom.repository';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports: [UsersModule, ChatbotsModule, ExternalApiModule],
+  imports: [PrismaModule, UsersModule, ChatbotsModule, ExternalApiModule],
   providers: [
     ChatroomsService,
     ChatroomsGateway,

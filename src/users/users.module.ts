@@ -3,9 +3,10 @@ import { UsersController } from './presentation/users.controller';
 import { UsersService } from './domain/users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRepositoryImpl } from './infrastructure/user.repository';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
-  imports: [],
+  imports: [PrismaModule],
   controllers: [UsersController],
   providers: [
     UsersService,
