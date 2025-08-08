@@ -1,8 +1,3 @@
-export enum MessageSenderType {
-  BOT = 'BOT',
-  USER = 'USER',
-}
-
 export const MAXIMUM_MESSAGE_LENGTH = 60;
 
 export const INITIAL_GREETING_FIXED_MESSAGE = (userNickname: string) =>
