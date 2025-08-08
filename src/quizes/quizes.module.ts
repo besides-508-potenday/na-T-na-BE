@@ -4,9 +4,11 @@ import { QuizRepositoryImpl } from './infrastructure/quiz.repository';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { QuizCacheStoreImpl } from './infrastructure/quiz.cache-store';
+import { PrismaModule } from '../prisma/prisma.module';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [],
+  imports: [PrismaModule, RedisModule],
   providers: [
     QuizesService,
     {
