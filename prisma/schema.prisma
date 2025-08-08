@@ -119,7 +119,9 @@ model Quiz {
   quiz String
   createdAt DateTime @default(now())
 
-  // 외래키 관계
+  // FK 관계
   chatroom_id String
+
+  // 외래키 관계
   chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
 }

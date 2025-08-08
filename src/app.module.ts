@@ -12,10 +12,9 @@ import { ChatbotsModule } from './chatbots/chatbots.module';
 import { MessagesModule } from './messages/messages.module';
 import { QuizesModule } from './quizes/quizes.module';
 import { ChatroomsModule } from './chatrooms/chatrooms.module';
-import { PersonalitiesModule } from './personalities/personalities.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { RedisService } from './redis/redis.service';
-import { PrismaService } from './prisma/prisma.service';
+import { ExternalApiModule } from './external-api/external-api.module';
 
 @Module({
   imports: [
@@ -28,7 +27,7 @@ import { PrismaService } from './prisma/prisma.service';
     MessagesModule,
     QuizesModule,
     ChatroomsModule,
-    PersonalitiesModule,
+
     RedisModule.forRoot({
       type: 'single',
       url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`, // Redis 서버 URL
@@ -37,6 +36,8 @@ import { PrismaService } from './prisma/prisma.service';
         port: 6379, // Redis 포트
       },
     }),
+
+    ExternalApiModule,
   ],
   controllers: [AppController],
   providers: [

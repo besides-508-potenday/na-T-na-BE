@@ -1,4 +1,4 @@
-import ChatbotWithPersonalities from '../infrastructure/chatbot-with-personalities.type';
+import ChatbotWithPersonalities from './chatbot-with-personalities.type';
 
 export interface IChatbotRepository {
   // 챗봇 리스트 조회

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChatbotsService } from './chatbots.service';
-import { IChatbotRepository } from '../domain/chatbot.repository.interface';
 
 const mockChatbotRepositoryImpl = {
   getChatbots: jest.fn(),
+  getChatbotById: jest.fn(),
 };
 
 describe('ChatbotsService', () => {
@@ -26,7 +26,16 @@ describe('ChatbotsService', () => {
     jest.clearAllMocks();
   });
 
-  it('getChatbot() : 호출하면 챗봇정보, 챗봇성격, 챗봇 프로필을 포함한 챗봇 정보 리스트를 리턴한다', async () => {
+  it('getChatbotById() : 호출하면 챗봇 정보(챗봇명)을 조회할 수 있다.', () => {
+    const mockChatbot = { name: '투닥이' };
+
+    chatbotRepository.getChatbotById.mockReturnValue(mockChatbot);
+    const result = chatbotRepository.getChatbotById(1);
+    expect(result.name).toEqual('투닥이');
+    expect(chatbotRepository.getChatbotById).toHaveBeenCalled();
+  });
+
+  it('getChatbots() : 호출하면 챗봇정보, 챗봇성격, 챗봇 프로필을 포함한 챗봇 정보 리스트를 리턴한다', async () => {
     const mockData = [
       {
         chatbot_id: 1,

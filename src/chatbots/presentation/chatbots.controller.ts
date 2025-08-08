@@ -1,8 +1,8 @@
 import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { ChatbotsService } from '../domain/chatbots.service';
-import { SwaggerMockInterceptor } from 'src/common/swagger-mock.interceptor';
+import { SwaggerMockInterceptor } from '../../common/swagger-mock.interceptor';
 import { ApiOkResponse, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { GetChatbotsResponseDto } from './dto/getChatbots.response.dto';
+import { GetChatbotsResponseDto } from './dto/get-chatbots.response.dto';
 
 @ApiTags('챗봇 API')
 @Controller('chatbots')
