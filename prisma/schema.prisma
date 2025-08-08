@@ -63,6 +63,7 @@ model Chatroom {
   current_distance Int @default(5)
   heart_life Int @default(5)
   letter String
+  from_chatbot String?
   turn_count Int @default(5)
   created_at DateTime @default(now())
 
