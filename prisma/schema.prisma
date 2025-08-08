@@ -124,4 +124,7 @@ model Quiz {
 
   // 외래키 관계
   chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
+
+  // 복합키 (chatroom_id, sequence)
+  @@unique([chatroom_id, sequence], map: "chatroom_id_sequence")
 }
