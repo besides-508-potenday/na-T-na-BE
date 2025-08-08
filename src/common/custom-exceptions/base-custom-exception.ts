@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ErrorUI, POLICY_ERRORS } from './policy-errors';
+import { ErrorUI } from './policy-errors';
+import { MAXIMUM_MESSAGE_LENGTH } from 'src/messages/domain/message-business-rule';
 
 export class BaseCustomException extends HttpException {
   constructor(
@@ -26,18 +27,25 @@ export class BaseCustomException extends HttpException {
 /** 부적절한 메시지 검출 */
 export class InAppropriateUserMessageException extends BaseCustomException {
   constructor(details?: any) {
-    const { message, errorCode, statusCode, errorUiType } =
-      POLICY_ERRORS['NERR_POLICY_INAPPROPRIATE_USER_MESSAGE'];
-    super(message, statusCode, errorUiType, errorCode, details);
+    super(
+      '부적절한 메시지가 감지되었어요.',
+      HttpStatus.BAD_REQUEST,
+      ErrorUI.SNACKBAR,
+      'NERR_POLICY_INAPPROPRIATE_USER_MESSAGE',
+      details,
+    );
   }
 }
 
 export class MessageLengthOverMaximumException extends BaseCustomException {
   constructor(details?: any) {
-    const { message, errorCode, statusCode, errorUiType } =
-      POLICY_ERRORS['NERR_POLICY_USER_MESSAGE_OVER_MAXIMUM'];
-
-    super(message, statusCode, errorUiType, errorCode, details);
+    super(
+      `메시지 입력 최대길이는 ${MAXIMUM_MESSAGE_LENGTH}자 입니다.`,
+      HttpStatus.BAD_REQUEST,
+      ErrorUI.SNACKBAR,
+      'NERR_POLICY_USER_MESSAGE_OVER_MAXIMUM',
+      details,
+    );
   }
 }
 
