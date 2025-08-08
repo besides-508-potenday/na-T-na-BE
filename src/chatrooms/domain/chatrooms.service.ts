@@ -1,15 +1,77 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { IChatroomRepository } from './chatroom.repository.interface';
+import {
+  BadRequestException,
+  ResourceNotFoundException,
+} from '../../common/custom-exceptions/base-custom-exception';
 
 @Injectable()
 export class ChatroomsService {
-  // 채팅방 입장 로직
-  joinRoom(room: string) {
-    throw new Error('Method not implemented.');
+  constructor(
+    @Inject('IChatroomRepository') private readonly chatroomRepository: IChatroomRepository,
+  ) {}
+
+  async createChatroom(userId: string, chatbotId: number) {
+    // 채팅방 insert
+    const chatroom = await this.chatroomRepository.createChatroom();
+    const chatroomId = chatroom.id;
+
+    // 유저+채팅방+챗봇 연결테이블에 데이터로우 생성
+    await this.chatroomRepository.createChatroomParticipants(userId, chatbotId, chatroomId);
+    return chatroom;
   }
 
-  // 채팅방에 메시지 전송
-  sendMessage(message: any): string {
-    // Logic to handle sending a message
-    return `투닥이: ${message} `;
+  /**
+   * 부정적인 반응일경우 (score = 0)
+   * - current_distance: 그대로 유지
+   * - heart_distance: 1씩 감소
+   *
+   * 긍정적인 반응일경우 (score = 1)
+   * - current_distance: 1씩 감소
+   * - heart_distance: 그대로 유지
+   *
+   * 공통
+   * - turn_count: 1씩감소
+   */
+  async updateDistanceWithChatbot(chatroomId: string, score: number) {
+    const chatroom = await this.chatroomRepository.findChatroomById(chatroomId);
+    if (!chatroom) {
+      throw new ResourceNotFoundException(
+        '채팅방이 존재하지 않습니다.',
+        `chatroom_id=${chatroomId} 인 채팅방이 존재하지 않음`,
+      );
+    }
+
+    switch (score) {
+      case 0: // 부정적인 평가
+        return await this.chatroomRepository.negativeChatbotReaction(
+          chatroomId,
+          chatroom.heart_life,
+          chatroom.turn_count,
+        );
+      case 1: // 긍정적인 평가
+        return await this.chatroomRepository.positiveChatbotReaction(
+          chatroomId,
+          chatroom.current_distance,
+          chatroom.turn_count,
+        );
+      default:
+        throw new BadRequestException(
+          '잘못된 요청입니다.',
+          '숫자 0과 1 이외는 score가 될 수 없습니다.',
+        );
+    }
+  }
+
+  /** 턴횟수 업데이트 */
+  async updateChatTurnCounts(chatroomId: string) {
+    const chatroom = await this.chatroomRepository.findChatroomById(chatroomId);
+    if (!chatroom) {
+      throw new ResourceNotFoundException(
+        '채팅방이 존재하지 않습니다.',
+        `chatroom_id=${chatroomId} 인 채팅방이 존재하지 않음`,
+      );
+    }
+    await this.chatroomRepository.updateTurnCount(chatroomId, chatroom.turn_count);
   }
 }
