@@ -1,0 +1,2 @@
+export const MINIMUM_USER_NICKNAME = 2;
+export const MAXIMUM_USER_NICKNAME = 10;

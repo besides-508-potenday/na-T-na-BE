@@ -4,19 +4,23 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ValidationPipe } from '@nestjs/common';
+import { GlobalExceptionFilter } from './common/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // GlobalExceptionFilter 적용
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   // Rest API 설정
   app.setGlobalPrefix('api');
 
+  // CORS 설정
   const corsOptions: CorsOptions = {
     origin: '*', // 모든 도메인에서 접근 허용
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // 허용할 HTTP 메소드
     allowedHeaders: 'Content-Type, Accept', // 허용할 헤더
   };
-  // CORS 설정
   app.enableCors(corsOptions);
 
   // Socket 어뎁터 연결
@@ -24,6 +28,20 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory: (errors) => {
+        // ValidationException 으로 변환
+        const formattedErrors = errors.map((error) => ({
+          field: error.property,
+          constraints: error.constraints,
+          value: error.value,
+        }));
+        // 커스텀 Exception 사용가능
+      },
     }),
   );
 

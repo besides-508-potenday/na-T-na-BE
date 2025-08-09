@@ -60,10 +60,11 @@ model Chatroom {
   id String @id @default(uuid())
 
   is_finished Boolean @default(false)
-  current_distance Int @default(10)
-  heart_life Int @default(10)
+  current_distance Int @default(5)
+  heart_life Int @default(5)
   letter String
-  turn_count Int @default(10)
+  from_chatbot String?
+  turn_count Int @default(5)
   created_at DateTime @default(now())
 
   // 외래키 관계
@@ -119,7 +120,12 @@ model Quiz {
   quiz String
   createdAt DateTime @default(now())
 
-  // 외래키 관계
+  // FK 관계
   chatroom_id String
+
+  // 외래키 관계
   chatroom Chatroom @relation(fields: [chatroom_id], references: [id])
+
+  // 복합키 (chatroom_id, sequence)
+  @@unique([chatroom_id, sequence], map: "chatroom_id_sequence")
 }

@@ -9,9 +9,7 @@ describe('RedisService', () => {
   let redisContainer: StartedTestContainer;
 
   beforeAll(async () => {
-    redisContainer = await new GenericContainer('redis')
-      .withExposedPorts(6379)
-      .start();
+    redisContainer = await new GenericContainer('redis').withExposedPorts(6379).start();
 
     const redisHost = redisContainer.getHost();
     const redisPort = redisContainer.getMappedPort(6379);

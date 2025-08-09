@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GetChatbotsResponseDto {
+export class GetChatbotsResponse {
   @ApiProperty({ example: 1 })
   chatbot_id: number;
 
