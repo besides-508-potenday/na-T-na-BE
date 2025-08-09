@@ -1,8 +1,28 @@
 import { PrismaService } from '../../prisma/prisma.service';
+import { CHATBOT_TURN_COUNT } from '../domain/chatroom-feedback-buisness-rule';
 import { IChatroomRepository } from '../domain/chatroom.repository.interface';
 
 export class ChatroomRepositoryImpl implements IChatroomRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  /** 마지막편지 업데이트 */
+  async updateLetter(command: {
+    chatroom_id: string;
+    is_finished: boolean;
+    letter: string;
+    from_chatbot: string;
+  }): Promise<unknown> {
+    return await this.prisma.chatroom.update({
+      where: {
+        id: command.chatroom_id,
+      },
+      data: {
+        letter: command.letter,
+        from_chatbot: command.from_chatbot,
+        is_finished: command.is_finished,
+      },
+    });
+  }
 
   /**
    * turn_count 가 0보다 클 경우에 turn_count 를 감소시킨다.
@@ -73,9 +93,9 @@ export class ChatroomRepositoryImpl implements IChatroomRepository {
       data: {
         letter: 'INITIAL_LETTER',
         is_finished: false,
-        heart_life: 10,
-        turn_count: 10,
-        current_distance: 10,
+        heart_life: CHATBOT_TURN_COUNT,
+        turn_count: CHATBOT_TURN_COUNT,
+        current_distance: CHATBOT_TURN_COUNT,
       },
     });
   }

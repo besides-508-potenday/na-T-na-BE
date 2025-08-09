@@ -7,8 +7,8 @@ export class RequestChatbotReactionFromConversationCommand {
 }
 
 export class RequestChatbotReactionFromConversationInfo {
-  react: string;
+  react?: string;
   score: number;
-  improved_quiz: string;
+  improved_quiz?: string;
   verification: boolean;
 }

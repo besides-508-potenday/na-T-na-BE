@@ -6,7 +6,7 @@ import Message from '../domain/message.type';
 export class MessageRepositoryImpl implements IMessageRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getChatbotMessages(chatroomId: string, chatbotId: number): Promise<Message[]> {
+  async getChatbotMessages(chatroomId: string): Promise<Message[]> {
     return await this.prisma.chatMessage.findMany({
       select: {
         content: true,
@@ -14,12 +14,14 @@ export class MessageRepositoryImpl implements IMessageRepository {
       },
       where: {
         chatroom_id: chatroomId,
-        chatbot_id: chatbotId,
         sender_type: SenderType.BOT,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
   }
-  async getUserMessages(chatroomId: string, userId: string): Promise<Message[]> {
+  async getUserMessages(chatroomId: string): Promise<Message[]> {
     return await this.prisma.chatMessage.findMany({
       select: {
         content: true,
@@ -27,8 +29,10 @@ export class MessageRepositoryImpl implements IMessageRepository {
       },
       where: {
         chatroom_id: chatroomId,
-        user_id: userId,
         sender_type: SenderType.USER,
+      },
+      orderBy: {
+        createdAt: 'asc',
       },
     });
   }
@@ -42,6 +46,9 @@ export class MessageRepositoryImpl implements IMessageRepository {
       where: {
         chatroom_id: chatroomId,
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
   async saveMessage(data: {
@@ -50,9 +57,13 @@ export class MessageRepositoryImpl implements IMessageRepository {
     sender_type: SenderType;
     chatbot_id: number;
     user_id: string;
-  }): Promise<ChatMessage> {
-    return await this.prisma.chatMessage.create({
+  }): Promise<Message[]> {
+    // 메시지 추가
+    await this.prisma.chatMessage.create({
       data: { ...data },
     });
+
+    // 추가후
+    return this.getChatbotMessages(data.chatroom_id);
   }
 }

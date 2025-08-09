@@ -14,10 +14,15 @@ import {
   RequestChatbotReactionFromConversationInfo,
 } from './dto/request-chatbot-reaction-from-conversation.dto';
 import { RequestFeedbackCommand, RequestFeedbackInfo } from './dto/request-feedback.dto';
+import { QuizesService } from '../quizes/domain/quizes.service';
+import QuizList from 'src/quizes/domain/quiz-list.type';
 
 @Injectable()
 export class ExternalApiService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly quizService: QuizesService,
+  ) {}
 
   async requestCreateSituation(request: {
     chatroom_id: string;
@@ -25,25 +30,28 @@ export class ExternalApiService {
     chatbot_name: string;
   }): Promise<RequestCreateSituationCommandInfo> {
     try {
-      // AI로부터 초기 퀴즈 리스트 받는다.
+      // (AI) [POST] /situation 요청
+      // AI로부터 초기 퀴즈 리스트(퀴즈10개)를 받는다.
       const result = await firstValueFrom(
         this.httpService.post(
           `${process.env.EXTERNAL_AI_SERVER_URL}/situation`,
           {
             user_nickname: request.user_nickname,
             chatbot_name: request.chatbot_name,
+            chatroom_id: request.chatroom_id,
           },
           {
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 1000000,
+            timeout: 5000000,
           },
         ),
       );
       const { quiz_list } = result.data;
+
       // 초기퀴즈리스트를 DB + Redis에 저장
-      // 첫번째 퀴즈를 리턴
+      await this.quizService.initializedQuizList(request.chatroom_id, quiz_list);
 
       return {
         quiz_list: quiz_list,
@@ -62,7 +70,14 @@ export class ExternalApiService {
    * @param data
    * @returns
    */
-  async requestChatbotReactionFromConversation(request: {}): Promise<RequestChatbotReactionFromConversationInfo> {
+  async requestChatbotReactionFromConversation(request: {
+    chatbot_name: string;
+    user_nickname: string;
+    current_distance: number;
+    chatroom_id: string;
+    messageConversations: string[];
+    quizList: string[];
+  }): Promise<RequestChatbotReactionFromConversationInfo> {
     try {
       // 대화 기록 리스트 조회
       // - 봇: (리액션/인사) + 퀴즈 => 메시지2개를 한개로 합쳐서 제공
@@ -70,12 +85,18 @@ export class ExternalApiService {
       const result = await firstValueFrom(
         this.httpService.post(
           `${process.env.EXTERNAL_AI_SERVER_URL}/conversation`,
-          {},
+          {
+            chatbot_name: request.chatbot_name,
+            user_nickname: request.user_nickname,
+            current_distance: request.current_distance,
+            conversation: request.messageConversations, // MessageList -> string[]
+            quiz_list: request.quizList, // QuizList -> string[]
+            chatroom_id: request.chatroom_id,
+          },
           {
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 1000000,
           },
         ),
       );
@@ -84,7 +105,13 @@ export class ExternalApiService {
       if (result.data?.verification == false) {
         throw new InAppropriateUserMessageException();
       }
-      return result.data;
+
+      return {
+        react: result.data?.react,
+        score: result.data?.score,
+        improved_quiz: result.data?.improved_quiz,
+        verification: result.data?.verification,
+      };
     } catch (error) {
       throw new InternalServiceErrorException(
         'AI 서버의 [POST] /conversation API 호출에 실패하였습니다.',
@@ -94,9 +121,11 @@ export class ExternalApiService {
   }
 
   async requestFeedback(request: {
+    chatroom_id: string;
     chatbot_name: string;
     user_nickname: string;
     current_distance: number;
+    wholeConversation: string[];
   }): Promise<RequestFeedbackInfo> {
     try {
       // 대화기록 리스트 조회
@@ -116,16 +145,16 @@ export class ExternalApiService {
         this.httpService.post(
           `${process.env.EXTERNAL_AI_SERVER_URL}/feedback`,
           {
+            chatroom_id: request.chatroom_id,
             chatbot_name: request.chatbot_name,
             user_nickname: request.user_nickname,
             current_distance: request.current_distance,
-            conversation: [],
+            conversation: request.wholeConversation,
           },
           {
             headers: {
               'Content-Type': 'application/json',
             },
-            timeout: 1000000,
           },
         ),
       );

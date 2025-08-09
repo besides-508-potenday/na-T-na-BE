@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { QuizesService } from './quizes.service';
 import QuizList from './quiz-list.type';
 import { ResourceNotFoundException } from '../../common/custom-exceptions/base-custom-exception';
-import { REDIS_QUIZ_LIST_KEY } from './quiz.cache-store.interface';
 
 const mockQuizRepository = {
   saveQuizList: jest.fn(),

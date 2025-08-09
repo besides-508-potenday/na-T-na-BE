@@ -10,8 +10,8 @@ export class UsersService {
   async createUser(userNickname: string): Promise<CreateUserInfo> {
     const user = await this.userRepository.createUser(userNickname);
     return {
-      id: user.userId,
-      nickname: user.userNickname,
+      id: user.id,
+      nickname: user.nickname,
     };
   }
 

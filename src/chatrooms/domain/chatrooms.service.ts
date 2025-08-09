@@ -79,4 +79,22 @@ export class ChatroomsService {
     }
     await this.chatroomRepository.updateTurnCount(chatroomId, chatroom.turn_count);
   }
+
+  /** 마지막 편지 관련 정보 저장
+   * - is_finished: false -> true
+   * - letter 값 넣어서 변경
+   * - from_chatbot: null -> 값넣기
+   * */
+  async updateLetter(command: {
+    chatroom_id: string;
+    is_finished: boolean;
+    letter: string;
+    from_chatbot: string;
+  }) {
+    await this.chatroomRepository.updateLetter({
+      ...command,
+    });
+
+    return this.getChatroomById(command.chatroom_id);
+  }
 }

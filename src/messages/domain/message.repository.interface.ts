@@ -2,8 +2,8 @@ import { ChatMessage, SenderType } from '@prisma/client';
 import Message from './message.type';
 
 export interface IMessageRepository {
-  getChatbotMessages(chatroomId: string, chatbotId: number): Promise<Message[]>;
-  getUserMessages(chatroomId: string, userId: string): Promise<Message[]>;
+  getChatbotMessages(chatroomId: string): Promise<Message[]>;
+  getUserMessages(chatroomId: string): Promise<Message[]>;
   getMessagesByChatroomId(chatroomId: string): Promise<Message[]>;
   // 메시지 저장
   saveMessage(data: {
@@ -12,5 +12,5 @@ export interface IMessageRepository {
     sender_type: SenderType;
     chatbot_id: number;
     user_id: string;
-  }): Promise<ChatMessage>;
+  }): Promise<Message[]>;
 }

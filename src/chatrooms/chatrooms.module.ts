@@ -8,9 +8,18 @@ import { ExternalApiModule } from '../external-api/external-api.module';
 import { ChatbotsModule } from '../chatbots/chatbots.module';
 import { ChatroomRepositoryImpl } from './infrastructure/chatroom.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { QuizesModule } from 'src/quizes/quizes.module';
+import { MessagesModule } from 'src/messages/messages.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ChatbotsModule, ExternalApiModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    ChatbotsModule,
+    ExternalApiModule,
+    QuizesModule,
+    MessagesModule,
+  ],
   providers: [
     ChatroomsService,
     ChatroomsGateway,
