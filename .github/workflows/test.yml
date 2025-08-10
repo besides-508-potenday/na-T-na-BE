@@ -10,6 +10,8 @@ jobs:
   test:
     name: Unit & E2E Tests
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: 'mysql://user:password@localhost:3306/testdb'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,12 +33,6 @@ jobs:
         run: |
           sudo systemctl start docker
           sudo chmod 666 /var/run/docker.sock
-
-      # - name: Run E2E tests with Test Containers
-      #   run: yarn test:e2e
-      #   env:
-      #     NODE_ENV: test
-      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Upload coverage reports
         if: success()
