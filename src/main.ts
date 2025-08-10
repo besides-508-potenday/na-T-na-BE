@@ -5,9 +5,32 @@ import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.int
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/global-exception.filter';
+import { Server } from 'socket.io';
 
+class SocketIOAdapter extends IoAdapter {
+  createIOServer(port: number, options?: any): Server {
+    const socketOptions = {
+      ...options,
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+        credentials: true,
+      },
+      transports: ['websocket', 'polling'],
+    };
+    Object.assign(socketOptions, {
+      pingTimeout: 300000, // 5분
+      pingInterval: 120000, // 2분
+      upgradeTimeout: 120000, // 2분
+      connectTimeout: 120000, // 2분
+    });
+    return super.createIOServer(port, socketOptions);
+  }
+}
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useWebSocketAdapter(new SocketIOAdapter(app));
 
   // GlobalExceptionFilter 적용
   app.useGlobalFilters(new GlobalExceptionFilter());

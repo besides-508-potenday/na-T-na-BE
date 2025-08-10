@@ -155,7 +155,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
             message: firstQuizMessage,
           },
         });
-      }, 500);
+      }, 1500);
 
       const response = {
         status: OK,
