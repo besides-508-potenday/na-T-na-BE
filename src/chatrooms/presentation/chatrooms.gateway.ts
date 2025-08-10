@@ -201,7 +201,6 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           '존재하지 않은 유저입니다.',
           `id: ${user_id} 인 유저는 존재하지 않습니다.`,
         );
-      const { user_nickname } = user.user_nickname;
 
       // 챗봇 조회
       const chatbot = await this.chatbotService.getChatbot(chatbot_id);
@@ -210,7 +209,6 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           '존재하지 않은 챗봇입니다.',
           `id: ${chatbot_id} 인 챗봇은 존재하지 않습니다.`,
         );
-      const { chatbot_name } = chatbot;
 
       // 현재 채팅방 조회
       const chatroom = await this.chatroomService.getChatroomById(chatroom_id);
@@ -235,8 +233,8 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
       const conversationResponse =
         await this.externalApiService.requestChatbotReactionFromConversation({
           chatroom_id: chatroom_id,
-          chatbot_name: chatbot_name,
-          user_nickname: user_nickname,
+          chatbot_name: chatbot.name,
+          user_nickname: user.nickname,
           current_distance: chatroom.current_distance,
           messageConversations: messageConversations,
           quizList: quizList.map((quiz) => quiz.quiz),
@@ -277,7 +275,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
 
       // 챗봇리액션
-      const reactionMessage = chatroom.turn_count == 0 ? LAST_FIXED_MESSAGE(user_nickname) : react;
+      const reactionMessage = chatroom.turn_count == 0 ? LAST_FIXED_MESSAGE(user.nickname) : react;
 
       // 리액션 평가 - score평가, score평가 이후에 current_distance, heart_life 업데이트..
       await this.chatroomService.updateDistanceWithChatbot(chatroom_id, score);
@@ -288,10 +286,10 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         data: {
           chatroom_id: chatroom_id,
           chatbot_id: chatbot_id,
-          chatbot_name: chatbot_name,
+          chatbot_name: chatbot.name,
           message: reactionMessage,
           user_id: user_id,
-          user_nickname: user_nickname,
+          user_nickname: user.nickname,
           sender_type: SenderType.BOT,
           score: score, // 리액션 점수:  1, 0
           chatbot_profile_image: `${S3_URL}/chatbots/${chatbot_id}/profile.png`,
@@ -313,10 +311,10 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           status: OK,
           data: {
             chatbot_id: chatbot_id,
-            chatbot_name: chatbot_name,
+            chatbot_name: chatbot.name,
             message: improved_quiz,
             user_id: user_id,
-            user_nickname: user_nickname,
+            user_nickname: user.nickname,
             sender_type: SenderType.BOT,
             chatroom_id: chatroom_id,
           },
