@@ -57,7 +57,6 @@ export class ChatroomsController {
         from_chatbot: chatroom.from_chatbot,
       };
     }
-    
 
     // AI서버에서 피드백요청
     // 메시지 리스트

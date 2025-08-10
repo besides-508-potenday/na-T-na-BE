@@ -27,7 +27,7 @@ export default async (): Promise<void> => {
       stdio: 'inherit',
     });
 
-    // execSync('npx prisma db seed', { stdio: 'inherit' });
+    execSync('npx prisma db seed', { stdio: 'inherit' });
 
     console.log('✅ Database schema initialized');
   } catch (error) {
