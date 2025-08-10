@@ -14,7 +14,6 @@ import { ExternalApiService } from 'src/external-api/external-api.service';
 import { MessagesService } from 'src/messages/domain/messages.service';
 import { SenderType } from '@prisma/client';
 import { feedbackConversation } from 'src/messages/domain/message-business-rule';
-import { S3 } from '@aws-sdk/client-s3';
 
 @ApiTags('채팅룸 API')
 @Controller('chatrooms')
@@ -58,6 +57,7 @@ export class ChatroomsController {
         from_chatbot: chatroom.from_chatbot,
       };
     }
+    
 
     // AI서버에서 피드백요청
     // 메시지 리스트
@@ -71,32 +71,6 @@ export class ChatroomsController {
         user_nickname: user.nickname,
         wholeConversation: feedbackConversation(messages),
       });
-
-    // feedback_mp3_file 은 base64인코딩된 파일이다.
-    const s3 = new S3({
-      region: 'ap-northeast-2',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-      },
-    });
-
-    try {
-      const base64String: string = feedback_mp3_file; // Assuming feedback_mp3_file contains the base64 string
-      const cleanBase64 = base64String.replace(/^data:audio\/[a-z]+;base64,/, '');
-      const mp3File: Buffer = Buffer.from(cleanBase64, 'base64');
-
-      // 파일 받고, base64로 디코딩해서 S3에 저장
-      await s3.putObject({
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: `chatrooms/results/${chatroomId}/letter_voice.mp3`,
-        Body: mp3File,
-        ContentType: 'audio/mpeg',
-        ACL: 'public-read',
-      });
-    } catch (error) {
-      throw new InternalServiceErrorException('base64 인코딩을 실패하였습니다.', error);
-    }
 
     const from_chatbot = `${last_greeting},\n${chatbot.name}`;
 
@@ -115,7 +89,7 @@ export class ChatroomsController {
       user_nickname: finishedChatroom.user!.user_nickname,
       chatbot_name: finishedChatroom.chatbot!.name,
       chatbot_id: finishedChatroom.chatbot!.id,
-      letter_mp3: `${S3_URL}/chatrooms/results/${finishedChatroom.chatbot!.id}/letter_voide.mp3`,
+      letter_mp3: `${S3_URL}/chatrooms/results/${finishedChatroom.chatroom!.id}/letter_voide.mp3`,
       chatbot_result_image: CHATBOT_RESULT_IMAGE(
         finishedChatroom.chatbot!.id,
         finishedChatroom.heart_life,
