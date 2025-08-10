@@ -10,24 +10,6 @@
       "cwd": "${workspaceFolder}",
       "autoAttachChildProcesses": true,
       "console": "integratedTerminal"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Jest E2E debug",
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest",
-      "args": ["--config", "${workspaceFolder}/test/jest-e2e.json", "--runInBand"],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Jest Unit Debug",
-      "program": "${workspaceFolder}/node_modules/jest/bin/jest",
-      "args": ["--runInBand"],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
     }
   ]
 }

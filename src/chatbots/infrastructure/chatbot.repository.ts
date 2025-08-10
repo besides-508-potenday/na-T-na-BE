@@ -1,5 +1,4 @@
 import { IChatbotRepository } from '../domain/chatbot.repository.interface';
-import ChatbotWithPersonalities from '../domain/chatbot-with-personalities.type';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export class ChatbotRepositoryImpl implements IChatbotRepository {
@@ -18,22 +17,14 @@ export class ChatbotRepositoryImpl implements IChatbotRepository {
     return chatbot;
   }
 
-  async getChatbots(): Promise<ChatbotWithPersonalities[]> {
+  async getChatbots() {
     const chatbots = await this.prisma.chatbot.findMany({
       select: {
         id: true,
         name: true,
-        speciality: true,
         is_unknown: true,
-        personalities: {
-          select: {
-            personality: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
+        speciality: true,
+        personality: true,
       },
     });
 
@@ -41,11 +32,9 @@ export class ChatbotRepositoryImpl implements IChatbotRepository {
     return chatbots.map((chatbot) => ({
       chatbot_id: chatbot.id,
       chatbot_name: chatbot.name,
-      chatbot_speciality: chatbot.speciality,
       is_unknown: chatbot.is_unknown,
-      chatbot_personalities: chatbot.is_unknown
-        ? chatbot.personalities.map((cp) => cp.personality.name).join(',')
-        : null,
+      chatbot_speciality: chatbot.speciality,
+      chatbot_personality: chatbot.personality,
     }));
   }
 }
