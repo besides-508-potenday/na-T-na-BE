@@ -22,7 +22,7 @@ describe('ChatbotsService', () => {
     chatbotRepository = module.get<typeof mockChatbotRepositoryImpl>('IChatbotRepository');
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 

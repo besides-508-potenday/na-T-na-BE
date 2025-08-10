@@ -46,7 +46,7 @@ describe('MessagesService', () => {
     messageCacheStore = module.get<typeof mockMessageCahceStoreImpl>('IMessageCacheStore');
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 

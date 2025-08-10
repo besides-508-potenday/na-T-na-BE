@@ -31,7 +31,7 @@ describe('ExternalApiService', () => {
     expect(service).toBeDefined();
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 

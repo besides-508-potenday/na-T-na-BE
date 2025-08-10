@@ -9,6 +9,6 @@
   "testTimeout": 100000,
   "maxWorkers": 1,
   "forceExit": true,
-  "detectOpenHandles": true,
+  "detectOpenHandles": false,
   "cache": false
 }

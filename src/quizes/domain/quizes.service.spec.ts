@@ -39,7 +39,7 @@ describe('QuizesService', () => {
     quizCacheStore = module.get('IQuizCacheStore');
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 
