@@ -6,12 +6,9 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "setupFilesAfterEnv": ["./setup-e2e.ts"],
-  "globalSetup": "./global-setup.ts",
-  "globalTeardown": "./global-teardown.ts",
   "testTimeout": 100000,
   "maxWorkers": 1,
   "forceExit": true,
-  "detectOpenHandles": true,
+  "detectOpenHandles": false,
   "cache": false
 }

@@ -26,7 +26,7 @@ describe('ChatroomsService', () => {
     service = module.get<ChatroomsService>(ChatroomsService);
     chatroomRepository = module.get<typeof mockChatroomRepositoryImpl>('IChatroomRepository');
   });
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 

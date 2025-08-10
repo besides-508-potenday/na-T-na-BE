@@ -26,46 +26,47 @@ export const INVALID_MESSAGE_KEYWORDS: string[] = [
  */
 export const convertConversation = (messages: Message[], user_answer: string) => {
   const result: string[] = [];
-  let currentBotMessage: string[] = [];
+  let currentBotMessages: string[] = [];
   for (const message of messages) {
     if (message.sender_type === SenderType.BOT) {
-      currentBotMessage.push(message.content);
+      currentBotMessages.push(message.content);
     } else {
-      if (currentBotMessage.length > 0) {
-        result.push(currentBotMessage.join(' '));
-        currentBotMessage = [];
+      if (currentBotMessages.length > 0) {
+        result.push(currentBotMessages.join(' '));
+        currentBotMessages = [];
       }
+      // user 메시지 추가
       result.push(message.content);
     }
   }
 
   // 마지막에 누적된 bot 메시지들이 있으면 처리
-  if (currentBotMessage.length > 0) result.push(currentBotMessage.join(' '));
+  if (currentBotMessages.length > 0) result.push(currentBotMessages.join(' '));
 
   // 새로운 user_answer 추가
-  if (result.length + 1 < CHATBOT_TURN_COUNT * 2) {
-    result.push(user_answer);
-  }
+  if (messages.length < 14) result.push(user_answer);
   return result;
 };
 
 export const feedbackConversation = (messages: Message[]) => {
   const result: string[] = [];
-  let currentBotMessage: string[] = [];
+  let currentBotMessages: string[] = [];
+
   for (const message of messages) {
     if (message.sender_type === SenderType.BOT) {
-      currentBotMessage.push(message.content);
+      // 봇 메시지는 임시 배열에 누적
+      currentBotMessages.push(message.content);
     } else {
-      if (currentBotMessage.length > 0) {
-        result.push(currentBotMessage.join(' '));
-        currentBotMessage = [];
+      // 사람 메시지를 만나면 누적된 봇메시지들을 먼저 처리
+      if (currentBotMessages.length > 0) {
+        result.push(currentBotMessages.join(' '));
+        currentBotMessages = [];
       }
+
+      // 유저 메시지 추가
       result.push(message.content);
     }
   }
-
-  // 마지막에 누적된 bot 메시지들이 있으면 처리
-  if (currentBotMessage.length > 0) result.push(currentBotMessage.join(' '));
 
   return result;
 };

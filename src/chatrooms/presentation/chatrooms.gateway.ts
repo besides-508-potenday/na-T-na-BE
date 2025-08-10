@@ -44,6 +44,8 @@ import { CHATBOT_TURN_COUNT } from '../domain/chatroom-feedback-buisness-rule';
     credentials: true,
     methods: ['GET', 'POST'],
     transports: ['websocket', 'polling'],
+    pingTimeout: 60000,
+    pingInterval: 25000,
   },
 })
 export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -137,11 +139,25 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         user.id,
       );
 
-      // 턴횟수 차감
       await this.chatroomService.updateChatTurnCounts(chatroom.id);
 
       // 'join_room' 이벤트 응답을 한다.
-      client.emit('join_room', {
+      setTimeout(() => {
+        client.emit('quiz', {
+          status: 'OK',
+          data: {
+            user_id: user.id,
+            user_nickname: user.nickname,
+            chatbot_id: chatbot.id,
+            chatbot_name: chatbot.name,
+            chatroom_id: chatroom.id,
+            sender_type: SenderType.BOT,
+            message: firstQuizMessage,
+          },
+        });
+      }, 500);
+
+      const response = {
         status: OK,
         data: {
           user_id: user.id,
@@ -154,23 +170,12 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           sender_type: SenderType.BOT,
           message: initialGreetingMessage,
           chatbot_profile_image: `${S3_URL}/chatbots/${chatbot.id}/profile.png`,
-          turn_count: chatroom.turn_count - 1,
+          turn_count: chatroom.turn_count,
         },
-      });
-
-      // 'quiz' 이벤트를 발행하여 연결된 클라이언트에게 첫번째 퀴즈전달.
-      client.emit('quiz', {
-        status: OK,
-        data: {
-          message: firstQuizMessage, // 퀴즈 메시지 전달
-          user_id: user.id,
-          user_nickname: user.nickname,
-          chatbot_id: chatbot.id,
-          chatbot_name: chatbot.name,
-          chatroom_id: chatroom.id,
-          sender_type: SenderType.BOT,
-        },
-      });
+      };
+      this.logger.log(response.data.message);
+      this.logger.log(firstQuizMessage);
+      return response;
     } catch (error) {
       this.logger.log(error);
       if (error instanceof BaseCustomException) {
@@ -178,6 +183,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
 
       // 그 이외의 문제발생은 UI 에러로 핸들링한다.
+      this.logger.error('error');
       throw new InternalServiceErrorException('예상외의 에러가 발생했습니다.', error);
     }
   }
@@ -212,16 +218,19 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
 
       // 현재 채팅방 조회
       const chatroom = await this.chatroomService.getChatroomById(chatroom_id);
-      if (!chatroom)
+      if (!chatroom) {
         throw new ResourceNotFoundException(
           '존재하지 않은 채팅방입니다.',
           `id: ${chatroom_id} 인 채팅방은 존재하지 않습니다.`,
         );
+      }
+
       const { turn_count, heart_life, current_distance } = chatroom;
 
       // 퀴즈 리스트조회
       const quizList = await this.quizService.getQuizList(chatroom_id);
 
+      // 메시지 조회
       const messages = await this.messageService.getMessagesByChatroomId(chatroom_id);
       const messageConversations = convertConversation(messages, request.message);
 
@@ -239,7 +248,16 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           messageConversations: messageConversations,
           quizList: quizList.map((quiz) => quiz.quiz),
         });
-      const { score, react, improved_quiz } = conversationResponse;
+      const { score, react, improved_quiz, verification } = conversationResponse;
+
+      // 유저메시지 저장
+      await this.messageService.createMessage(
+        chatroom_id,
+        message,
+        SenderType.USER,
+        chatbot_id,
+        user_id,
+      );
 
       if (turn_count > 0) {
         // 퀴즈 업데이트
@@ -248,14 +266,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           targetSequence: CHATBOT_TURN_COUNT - turn_count + 1,
           improvedQuiz: improved_quiz!,
         });
-        // 유저메시지 저장
-        await this.messageService.createMessage(
-          chatroom_id,
-          message,
-          SenderType.USER,
-          chatbot_id,
-          user_id,
-        );
+
         // 챗봇리액션 메시지 저장
         await this.messageService.createMessage(
           chatroom_id,
@@ -274,14 +285,12 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         );
       }
 
-      // 챗봇리액션
-      const reactionMessage = chatroom.turn_count == 0 ? LAST_FIXED_MESSAGE(user.nickname) : react;
-
       // 리액션 평가 - score평가, score평가 이후에 current_distance, heart_life 업데이트..
       await this.chatroomService.updateDistanceWithChatbot(chatroom_id, score);
 
-      // 'answer' 이벤트를 수신하여 응답을 한다.
-      client.emit('answer', {
+      // 챗봇리액션
+      const reactionMessage = chatroom.turn_count === 0 ? LAST_FIXED_MESSAGE(user.nickname) : react;
+      const response = {
         status: OK,
         data: {
           chatroom_id: chatroom_id,
@@ -294,17 +303,22 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           score: score, // 리액션 점수:  1, 0
           chatbot_profile_image: `${S3_URL}/chatbots/${chatbot_id}/profile.png`,
           reaction_image:
-            turn_count == 0
+            turn_count === 0
               ? null
-              : score == 1
+              : score === 1
                 ? `${S3_URL}/chatbots/${chatbot_id}/reactions/positive.png`
                 : `${S3_URL}/chatbots/${chatbot_id}/reactions/negative.png`,
           heart_life: heart_life,
           current_distance: current_distance,
           turn_count: turn_count,
         },
-      });
+      };
 
+      // 'answer' 이벤트를 수신하여 응답을 한다.
+      client.emit('answer', response);
+
+      this.logger.log(`current_distance: ${chatroom.current_distance}`);
+      this.logger.log(`heart_life: ${chatroom.heart_life}`);
       if (turn_count > 0) {
         // 'quiz' 이벤트를 발행하여 질문 메시지를 전송한다.
         client.emit('quiz', {
@@ -319,8 +333,11 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
             chatroom_id: chatroom_id,
           },
         });
+
+        this.logger.log(`improved_quiz: ${improved_quiz}`);
       } else {
         // 마지막인경우는 소켓을 종료함으로써 채팅대화를 종료한다.
+        this.logger.log('5번 턴 대화 끝 종료');
         client.disconnect();
       }
     } catch (error) {
@@ -339,12 +356,13 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         });
       }
 
+      this.logger.error('error');
       if (error instanceof BaseCustomException) {
         throw error;
       }
 
       // 그 이외의 문제발생은 UI 에러로 핸들링한다.
-      throw new InternalServiceErrorException('예상외의 에러가 발생했습니다.', error);
+      throw new InternalServiceErrorException('예상외의 에러가 발생했습니다.', { ...error });
     }
   }
 

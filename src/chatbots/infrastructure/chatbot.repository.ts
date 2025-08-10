@@ -1,5 +1,6 @@
 import { IChatbotRepository } from '../domain/chatbot.repository.interface';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Chatbot } from '@prisma/client';
 
 export class ChatbotRepositoryImpl implements IChatbotRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,6 +16,16 @@ export class ChatbotRepositoryImpl implements IChatbotRepository {
       },
     });
     return chatbot;
+  }
+  async getChatbotByChatbotId(chatroomId: string) {
+    return await this.prisma.chatroomParticipant.findFirst({
+      where: {
+        chatroom_id: chatroomId,
+      },
+      include: {
+        chatbot: true,
+      },
+    });
   }
 
   async getChatbots() {

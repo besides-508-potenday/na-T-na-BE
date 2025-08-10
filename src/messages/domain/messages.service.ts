@@ -27,20 +27,10 @@ export class MessagesService {
       chatbot_id: chatbotId,
       user_id: userId,
     });
-
-    // 레디스 캐시스토어 업데이트
-    await this.messageCacheStore.saveMessageListAtCacheStore(chatroomId, messages);
     return messages;
   }
 
   async getMessagesByChatroomId(chatroomId: string): Promise<Message[]> {
-    // 캐시스토어에서 꺼낸다
-    const messagesFromCahceStore =
-      await this.messageCacheStore.getMessageListFromCacheStore(chatroomId);
-    if (messagesFromCahceStore && messagesFromCahceStore.length > 0) {
-      return messagesFromCahceStore;
-    }
-
     // 데이터베이스에서 꺼낸다
     const messages = await this.messageRepository.getMessagesByChatroomId(chatroomId);
     if (!messages || messages.length === 0) {
@@ -50,8 +40,6 @@ export class MessagesService {
       );
     }
 
-    // 레디스 캐시스토어에 저장
-    await this.messageCacheStore.saveMessageListAtCacheStore(chatroomId, messages);
     return messages;
   }
 

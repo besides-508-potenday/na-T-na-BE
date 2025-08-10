@@ -12,8 +12,7 @@ export class ChatroomsService {
   ) {}
 
   async getChatroomById(chatroomId: string) {
-    const chatroom = await this.chatroomRepository.findChatroomById(chatroomId);
-    return chatroom;
+    return await this.chatroomRepository.findChatroomById(chatroomId);
   }
 
   async createChatroom(userId: string, chatbotId: number) {

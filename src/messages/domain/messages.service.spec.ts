@@ -46,7 +46,7 @@ describe('MessagesService', () => {
     messageCacheStore = module.get<typeof mockMessageCahceStoreImpl>('IMessageCacheStore');
   });
 
-  afterEach(() => {
+  afterAll(() => {
     jest.clearAllMocks();
   });
 
@@ -197,24 +197,16 @@ describe('MessagesService', () => {
       const messages = [
         { sender_type: SenderType.BOT, content: '첫인사' },
         { sender_type: SenderType.BOT, content: '퀴즈1' },
-
         { sender_type: SenderType.USER, content: '답변1' },
-
         { sender_type: SenderType.BOT, content: '퀴즈1-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈2' },
-
         { sender_type: SenderType.USER, content: '답변2' },
-
         { sender_type: SenderType.BOT, content: '퀴즈2-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈3' },
-
         { sender_type: SenderType.USER, content: '답변3' },
-
         { sender_type: SenderType.BOT, content: '퀴즈3-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈4' },
-
         { sender_type: SenderType.USER, content: '답변4' },
-
         { sender_type: SenderType.BOT, content: '퀴즈4-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈5' },
       ];
@@ -257,73 +249,6 @@ describe('MessagesService', () => {
 
       // assert
       expect(result).toEqual(messages);
-    });
-    it('캐시저장소에 데이터가 존재하면, 캐시저장소에서 조회를 한다.', async () => {
-      // arrange
-      const chatroomId = 'test-chatroom-id';
-      const greeting = INITIAL_GREETING_FIXED_MESSAGE('테스트2');
-
-      const cacheMessages: Message[] = [
-        { sender_type: SenderType.BOT, content: greeting },
-        {
-          sender_type: SenderType.BOT,
-          content: '퀴즈1',
-        },
-        {
-          sender_type: SenderType.USER,
-          content: '퀴즈1에 대한 사용자 답변1',
-        },
-        {
-          sender_type: SenderType.BOT,
-          content: '사용자 답변 1에 대한 챗봇 리액션1',
-        },
-        {
-          sender_type: SenderType.BOT,
-          content: '개선된 퀴즈2',
-        },
-      ];
-      messageCacheStore.getMessageListFromCacheStore = jest.fn().mockResolvedValue(cacheMessages);
-
-      // act
-      const result = await service.getMessagesByChatroomId(chatroomId);
-
-      // assert
-      expect(messageCacheStore.getMessageListFromCacheStore).toHaveBeenCalledWith(chatroomId);
-      expect(result).toEqual(cacheMessages);
-    });
-    it('캐시저장소에 데이터가 없으면, 데이터베이스에서 조회하고, 이후에 캐시저장소에 다시 저장한다', async () => {
-      // arrange
-      const chatroomId = 'test-chatroom-id';
-      const greeting = INITIAL_GREETING_FIXED_MESSAGE('테스트2');
-      const dbMessages: Message[] = [
-        { sender_type: SenderType.BOT, content: greeting },
-        {
-          sender_type: SenderType.BOT,
-          content: '퀴즈1',
-        },
-        {
-          sender_type: SenderType.USER,
-          content: '퀴즈1에 대한 사용자 답변1',
-        },
-        {
-          sender_type: SenderType.BOT,
-          content: '사용자 답변 1에 대한 챗봇 리액션1',
-        },
-        {
-          sender_type: SenderType.BOT,
-          content: '개선된 퀴즈2',
-        },
-      ];
-      messageCacheStore.getMessageListFromCacheStore = jest.fn().mockResolvedValue(null);
-      messageRepository.getMessagesByChatroomId = jest.fn().mockResolvedValue(dbMessages);
-
-      // act
-      const result = await service.getMessagesByChatroomId(chatroomId);
-
-      // assert
-      expect(messageCacheStore.getMessageListFromCacheStore).toHaveBeenCalledWith(chatroomId);
-      expect(messageRepository.getMessagesByChatroomId).toHaveBeenCalledWith(chatroomId);
-      expect(result).toEqual(dbMessages);
     });
     it('캐시저장소에 데이터가 없고, 데이터베이스에도 없다면 ResourceNotFoundException 예외가 발생한다', async () => {
       // arrange
@@ -423,10 +348,6 @@ describe('MessagesService', () => {
       expect(result).toEqual(messages);
       expect(result[2].sender_type).toEqual(SenderType.USER);
       expect(result[2].content).toEqual(content);
-      expect(messageCacheStore.saveMessageListAtCacheStore).toHaveBeenCalledWith(
-        chatroomId,
-        messages,
-      );
     });
     it('sender_type=BOT 인 메시지 생성을 성공한다', async () => {
       // arrange
@@ -467,10 +388,6 @@ describe('MessagesService', () => {
       // assert
       expect(result[messages.length - 1].sender_type).toEqual(SenderType.BOT);
       expect(result[messages.length - 1].content).toEqual(content);
-      expect(messageCacheStore.saveMessageListAtCacheStore).toHaveBeenCalledWith(
-        chatroomId,
-        messages,
-      );
     });
   });
 });
