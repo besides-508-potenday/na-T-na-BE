@@ -29,9 +29,9 @@ model Chatbot {
   speciality String 
   is_unknown Boolean @default(false)
   created_at DateTime @default(now())  
+  personality String @default("")
 
   // 외래키 관계
-  personality String @default("")
   chatroom_participants ChatroomParticipant[] // 1:N
   messages ChatMessage[] // 1:N
 }

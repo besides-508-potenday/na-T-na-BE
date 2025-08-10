@@ -3,7 +3,7 @@ type ChatbotWithPersonalities = {
   chatbot_name: string;
   chatbot_speciality: string;
   is_unknown: boolean;
-  chatbot_personalities: string | null;
+  chatbot_personality: string;
 };
 
 export default ChatbotWithPersonalities;

@@ -41,14 +41,14 @@ describe('ChatbotsService', () => {
         chatbot_id: 1,
         chatbot_name: '투닥이',
         chatbot_speciality: '공감 학습 능력기',
-        chatbot_personalities: '소심함, 감정 과몰입, 인정 욕구, 관계 중심 정서',
+        chatbot_personality: '소심함, 감정 과몰입, 인정 욕구, 관계 중심 정서',
         is_unknown: false,
       },
       {
         chatbot_id: 2,
         chatbot_name: '썸고수_???',
         chatbot_speciality: '연애 공감 시뮬레이션',
-        chatbot_personalities: null,
+        chatbot_personality: '???',
         is_unknown: true,
       },
     ];
@@ -72,7 +72,7 @@ describe('ChatbotsService', () => {
       'https://na-t-na-s3.s3.ap-northeast-2.amazonaws.com/chatbots/2/unknown.png',
     );
     expect(result[1].is_unknown).toBe(true);
-    expect(result[1].chatbot_personalities).toBeNull();
+    expect(result[1].chatbot_personality).toEqual('???');
 
     expect(chatbotRepository.getChatbots).toHaveBeenCalled();
   });
