@@ -28,4 +28,10 @@ export class ChatbotsService {
     const chatbot = await this.chatbotRepository.getChatbotById(id);
     return chatbot;
   }
+
+  /** 채팅방 고유식별자로(chatroom_id)로 챗봇조회하기 */
+  async getChatbotByChatroomId(chatroomId: string) {
+    const chatbot = await this.chatbotRepository.getChatbotByChatbotId(chatroomId);
+    return chatbot;
+  }
 }

@@ -1,4 +1,5 @@
 export interface IUserRepository {
+  getUserByChatroomId(chatroomId: string);
   // 유저생성
   createUser(userNickname: string);
 

@@ -13,7 +13,6 @@ import {
   RequestChatbotReactionFromConversationCommand,
   RequestChatbotReactionFromConversationInfo,
 } from './dto/request-chatbot-reaction-from-conversation.dto';
-import { RequestFeedbackCommand, RequestFeedbackInfo } from './dto/request-feedback.dto';
 import { QuizesService } from '../quizes/domain/quizes.service';
 import QuizList from 'src/quizes/domain/quiz-list.type';
 
@@ -121,12 +120,12 @@ export class ExternalApiService {
   }
 
   async requestFeedback(request: {
-    chatroom_id: string;
-    chatbot_name: string;
     user_nickname: string;
+    chatbot_name: string;
+    chatroom_id: string;
+    conversation: string[];
     current_distance: number;
-    wholeConversation: string[];
-  }): Promise<RequestFeedbackInfo> {
+  }) {
     try {
       // 대화기록 리스트 조회
       /**
@@ -149,7 +148,7 @@ export class ExternalApiService {
             chatbot_name: request.chatbot_name,
             user_nickname: request.user_nickname,
             current_distance: request.current_distance,
-            conversation: request.wholeConversation,
+            conversation: request.conversation,
           },
           {
             headers: {
@@ -159,7 +158,16 @@ export class ExternalApiService {
         ),
       );
 
-      return result.data;
+      if (!result || !result.data)
+        throw new InternalServiceErrorException(
+          '결과 요청하는데 실패하였습니다.',
+          'result, result.data가 존재하지 않습니다.',
+        );
+      return {
+        feedback: result.data?.feedback,
+        last_greeting: result.data?.last_greeting,
+        audio_base64: result.data?.audio_base64,
+      };
     } catch (error) {
       throw new InternalServiceErrorException(
         'AI 서버의 [POST] /conversation API 호출에 실패하였습니다.',

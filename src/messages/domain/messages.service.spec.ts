@@ -197,24 +197,16 @@ describe('MessagesService', () => {
       const messages = [
         { sender_type: SenderType.BOT, content: '첫인사' },
         { sender_type: SenderType.BOT, content: '퀴즈1' },
-
         { sender_type: SenderType.USER, content: '답변1' },
-
         { sender_type: SenderType.BOT, content: '퀴즈1-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈2' },
-
         { sender_type: SenderType.USER, content: '답변2' },
-
         { sender_type: SenderType.BOT, content: '퀴즈2-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈3' },
-
         { sender_type: SenderType.USER, content: '답변3' },
-
         { sender_type: SenderType.BOT, content: '퀴즈3-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈4' },
-
         { sender_type: SenderType.USER, content: '답변4' },
-
         { sender_type: SenderType.BOT, content: '퀴즈4-답변-리액션' },
         { sender_type: SenderType.BOT, content: '퀴즈5' },
       ];

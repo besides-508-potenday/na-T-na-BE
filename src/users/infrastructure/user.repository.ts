@@ -20,4 +20,20 @@ export class UserRepositoryImpl implements IUserRepository {
       },
     });
   }
+
+  async getUserByChatroomId(chatroomId: string) {
+    return await this.prisma.chatroomParticipant.findFirst({
+      where: {
+        chatroom_id: chatroomId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            nickname: true,
+          },
+        },
+      },
+    });
+  }
 }

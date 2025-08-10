@@ -17,6 +17,12 @@ export class UsersService {
 
   // 단일 유저조회
   async getOneUser(userId: string) {
-    return await this.userRepository.getOneUserById(userId);
+    const participant = await this.userRepository.getOneUserById(userId);
+    return participant?.user ?? null;
+  }
+
+  // 채팅방 식별자로 참여유저 조회하기
+  async getUserByChatroomId(chatroomId: string) {
+    return await this.userRepository.getUserByChatroomId(chatroomId);
   }
 }

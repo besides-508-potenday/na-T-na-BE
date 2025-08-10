@@ -14,6 +14,7 @@ import { ExternalApiService } from 'src/external-api/external-api.service';
 import { MessagesService } from 'src/messages/domain/messages.service';
 import { SenderType } from '@prisma/client';
 import { feedbackConversation } from 'src/messages/domain/message-business-rule';
+import Message from 'src/messages/domain/message.type';
 
 @ApiTags('채팅룸 API')
 @Controller('chatrooms')
@@ -33,6 +34,7 @@ export class ChatroomsController {
     type: GetLastLetterResponse,
   })
   async getLetter(@Param('chatroom_id') chatroomId: string) {
+    // 채팅방 조회
     const chatroom = await this.chatroomService.getChatroomById(chatroomId);
     if (!chatroom) {
       throw new ResourceNotFoundException(
@@ -40,7 +42,33 @@ export class ChatroomsController {
         `chatroom_id: ${chatroomId}인 채팅방을 찾을 수 없습니다.`,
       );
     }
-    const { is_finished, chatbot, user, message, quiz } = chatroom;
+
+    // 유저조회
+    const { user, user_id, ...userParticipants } =
+      await this.userService.getUserByChatroomId(chatroomId);
+    const user_nickname = user.nickname;
+
+    // 챗봇조회
+    const { chatbot, chatbot_id, ...chatbotParticipants } =
+      await this.chatbotService.getChatbotByChatroomId(chatroomId);
+    const chatbot_name = chatbot.name;
+
+    // 메시지 조회
+    const messages = await this.mesageService.getMessagesByChatroomId(chatroomId);
+    if (messages === null || messages.length === 0) {
+      throw new ResourceNotFoundException('메시지가 존재하지 않습니다.');
+    }
+
+    const originWholeConversation: Message[] = messages.map((msg) => {
+      return {
+        content: msg.content,
+        sender_type: msg.sender_type,
+      } as Message;
+    });
+
+    const feedbackConversations = feedbackConversation(originWholeConversation);
+
+    const { is_finished } = chatroom;
 
     // 이미 편지지작성 종료상태
     if (is_finished) {
@@ -49,29 +77,28 @@ export class ChatroomsController {
         is_finished: chatroom.is_finished,
         current_distance: RESULT_DISTANCE(chatroom.current_distance),
         letter: chatroom.letter,
-        user_nickname: chatroom.user!.user_nickname,
-        chatbot_name: chatroom.chatbot!.name,
-        chatbot_id: chatroom.chatbot!.id,
-        letter_mp3: `${S3_URL}/chatrooms/results/${chatroom.chatbot!.id}/letter_voide.mp3`,
-        chatbot_result_image: CHATBOT_RESULT_IMAGE(chatroom.chatbot!.id, chatroom.heart_life),
-        from_chatbot: chatroom.from_chatbot,
+        user_nickname: user_nickname,
+        chatbot_name: chatbot_name,
+        chatbot_id: chatbot!.id,
+        letter_mp3: `${S3_URL}/chatrooms/results/${chatroom!.id}/letter_voide.mp3`,
+        chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot_id, chatroom.heart_life),
+        from_chatbot: chatroom.from_chatbot ?? `너에게 편지를 보낸.. ${chatbot_name}`,
       };
     }
 
     // AI서버에서 피드백요청
-    // 메시지 리스트
-    const messages = await this.mesageService.getMessagesByChatroomId(chatroomId);
+    // 채팅 결과를 불러온다.
+    const feedbackResult = await this.externalApiService.requestFeedback({
+      chatroom_id: chatroomId,
+      chatbot_name: chatbot_name,
+      current_distance: chatroom.current_distance,
+      user_nickname: user_nickname,
+      conversation: feedbackConversations,
+    });
 
-    const { feedback, last_greeting, feedback_mp3_file } =
-      await this.externalApiService.requestFeedback({
-        chatroom_id: chatroomId,
-        chatbot_name: chatbot.name,
-        current_distance: chatroom.current_distance,
-        user_nickname: user.nickname,
-        wholeConversation: feedbackConversation(messages),
-      });
+    const { feedback, last_greeting, audio_base64 } = feedbackResult;
 
-    const from_chatbot = `${last_greeting},\n${chatbot.name}`;
+    const from_chatbot = `${last_greeting},\n${chatbot_name}`;
 
     const finishedChatroom = await this.chatroomService.updateLetter({
       chatroom_id: chatroomId,
@@ -81,18 +108,15 @@ export class ChatroomsController {
     });
 
     return {
-      chatroom_id: finishedChatroom.id,
+      chatroom_id: chatroomId,
       is_finished: finishedChatroom.is_finished,
       current_distance: RESULT_DISTANCE(finishedChatroom.current_distance),
       letter: finishedChatroom.letter,
-      user_nickname: finishedChatroom.user!.user_nickname,
-      chatbot_name: finishedChatroom.chatbot!.name,
-      chatbot_id: finishedChatroom.chatbot!.id,
-      letter_mp3: `${S3_URL}/chatrooms/results/${finishedChatroom.chatroom!.id}/letter_voide.mp3`,
-      chatbot_result_image: CHATBOT_RESULT_IMAGE(
-        finishedChatroom.chatbot!.id,
-        finishedChatroom.heart_life,
-      ),
+      user_nickname: user!.nickname,
+      chatbot_name: chatbot!.name,
+      chatbot_id: chatbot!.id,
+      letter_mp3: audio_base64,
+      chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot!.id, finishedChatroom.heart_life),
       from_chatbot: finishedChatroom.from_chatbot,
     };
   }

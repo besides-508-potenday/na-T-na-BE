@@ -1,11 +1,7 @@
 export class RequestFeedbackCommand {
-  chatbot_name: string;
   user_nickname: string;
-  current_distance: number;
+  chatbot_name: string;
+  chatroom_id: string;
   conversation: string[];
-}
-export class RequestFeedbackInfo {
-  feedback: string;
-  last_greeting: string;
-  feedback_mp3_file: string;
+  current_distance: number;
 }
