@@ -155,7 +155,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
             message: firstQuizMessage,
           },
         });
-      }, 500);
+      }, 1000);
 
       const response = {
         status: OK,
@@ -177,8 +177,8 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
       this.logger.log(firstQuizMessage);
       return response;
     } catch (error) {
-      this.logger.log(error);
       if (error instanceof BaseCustomException) {
+        this.logger.log(error.message);
         throw error;
       }
 
@@ -202,11 +202,12 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
 
       // 유저조회
       const user = await this.userService.getOneUser(user_id);
-      if (!user)
+      if (!user) {
         throw new ResourceNotFoundException(
           '존재하지 않은 유저입니다.',
           `id: ${user_id} 인 유저는 존재하지 않습니다.`,
         );
+      }
 
       // 챗봇 조회
       const chatbot = await this.chatbotService.getChatbot(chatbot_id);
