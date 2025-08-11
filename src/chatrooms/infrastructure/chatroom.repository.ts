@@ -11,7 +11,7 @@ export class ChatroomRepositoryImpl implements IChatroomRepository {
     is_finished: boolean;
     letter: string;
     from_chatbot: string;
-  }): Promise<unknown> {
+  }) {
     return await this.prisma.chatroom.update({
       where: {
         id: command.chatroom_id,
@@ -64,8 +64,8 @@ export class ChatroomRepositoryImpl implements IChatroomRepository {
         id: chatroomId,
       },
       data: {
-        current_distance: currentDistance - 1, // 현재 챗봇과의 거리 1씩 감소
-        turn_count: currentTurnCount - 1, // 턴카운트 감소
+        current_distance: currentDistance > 0 ? { decrement: 1 } : currentDistance, // 현재 챗봇과의 거리 1씩 감소
+        turn_count: currentTurnCount > 0 ? { decrement: 1 } : currentTurnCount, // 턴카운트 감소
       },
     });
   }

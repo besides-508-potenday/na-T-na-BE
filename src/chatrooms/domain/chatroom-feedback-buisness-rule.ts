@@ -14,18 +14,18 @@ export const RESULT_DISTANCE = (current_distance: number) => {
   return 20 * current_distance;
 };
 
-export const CHATBOT_RESULT_IMAGE = (chatbot_id: number, heart_life: number) => {
-  switch (heart_life) {
-    case 0:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/result_0.png`;
-    case 1:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/result_1.png`;
-    case 2:
-    case 3:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/result_2.png`;
-    case 4:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/result_3.png`;
+export const CHATBOT_RESULT_IMAGE = (chatbot_id: number, current_distance: number) => {
+  switch (current_distance) {
     case 5:
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_0.png`;
+    case 4:
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_1.png`;
+    case 3:
+    case 2:
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_2.png`;
+    case 1:
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_3.png`;
+    case 0:
       return `${S3_URL}/chatbots/${chatbot_id}/results/result_4.png`;
     default:
       throw new BadRequestException(
