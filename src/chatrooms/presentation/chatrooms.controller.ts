@@ -80,7 +80,7 @@ export class ChatroomsController {
         user_nickname: user_nickname,
         chatbot_name: chatbot_name,
         chatbot_id: chatbot!.id,
-        letter_mp3: `${S3_URL}/chatrooms/results/${chatroom!.id}/letter_voide.mp3`,
+        letter_mp3: `${S3_URL}/chatrooms/results/${chatroom!.id}/letter_voice.mp3`,
         chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot_id, chatroom.heart_life),
         from_chatbot: chatroom.from_chatbot ?? `너에게 편지를 보낸.. ${chatbot_name}`,
       };
