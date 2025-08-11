@@ -81,7 +81,7 @@ export class ChatroomsController {
         chatbot_name: chatbot_name,
         chatbot_id: chatbot!.id,
         letter_mp3: `${S3_URL}/chatrooms/results/${chatroom!.id}/letter_voice.mp3`,
-        chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot_id, chatroom.heart_life),
+        chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot_id, chatroom.current_distance),
         from_chatbot: chatroom.from_chatbot ?? `너에게 편지를 보낸.. ${chatbot_name}`,
       };
     }
@@ -116,7 +116,7 @@ export class ChatroomsController {
       chatbot_name: chatbot!.name,
       chatbot_id: chatbot!.id,
       letter_mp3: audio_base64,
-      chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot!.id, finishedChatroom.heart_life),
+      chatbot_result_image: CHATBOT_RESULT_IMAGE(chatbot!.id, finishedChatroom.current_distance),
       from_chatbot: finishedChatroom.from_chatbot,
     };
   }

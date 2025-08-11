@@ -76,7 +76,7 @@ export class ChatroomsService {
         `chatroom_id=${chatroomId} 인 채팅방이 존재하지 않음`,
       );
     }
-    await this.chatroomRepository.updateTurnCount(chatroomId, chatroom.turn_count);
+    return await this.chatroomRepository.updateTurnCount(chatroomId, chatroom.turn_count);
   }
 
   /** 마지막 편지 관련 정보 저장

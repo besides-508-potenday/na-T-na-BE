@@ -139,7 +139,9 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         user.id,
       );
 
-      await this.chatroomService.updateChatTurnCounts(chatroom.id);
+      // // 첫퀴즈받으면 turn_count: 5-> 4로 줄어듦
+      // const updatedTurnCounts = await this.chatroomService.updateChatTurnCounts(chatroom.id);
+      // chatroom.turn_count = updatedTurnCounts.turn_count;
 
       // 'join_room' 이벤트 응답을 한다.
       setTimeout(() => {
@@ -173,8 +175,11 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           turn_count: chatroom.turn_count,
         },
       };
-      this.logger.log(response.data.message);
-      this.logger.log(firstQuizMessage);
+
+      this.logger.log(`turn_count: ${chatroom.turn_count}`);
+      this.logger.log(`heart_life: ${chatroom.heart_life}`);
+      this.logger.log(`current_distance: ${chatroom.current_distance}`);
+      this.logger.log(`1st quiz: ${firstQuizMessage}`);
       return response;
     } catch (error) {
       if (error instanceof BaseCustomException) {
@@ -226,8 +231,6 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         );
       }
 
-      const { turn_count, heart_life, current_distance } = chatroom;
-
       // 퀴즈 리스트조회
       const quizList = await this.quizService.getQuizList(chatroom_id);
 
@@ -263,8 +266,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
       }
 
       const { score, react, improved_quiz, verification } = conversationResponse!;
-
-      // 유저메시지 저장
+      // 부적절하지 않으므로, 유저(퀴즈 답변) 메시지 저장
       await this.messageService.createMessage(
         chatroom_id,
         message,
@@ -273,11 +275,23 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         user_id,
       );
 
-      if (turn_count > 0) {
+      // 챗봇 리액션 - score을 기반으로 상태업데이트
+      // current_distance, heart_life, turn_count 업데이트..
+      const reactionResult = await this.chatroomService.updateDistanceWithChatbot(
+        chatroom_id,
+        score,
+      );
+
+      const { current_distance, heart_life, turn_count } = reactionResult;
+      chatroom.current_distance = current_distance;
+      chatroom.heart_life = heart_life;
+      chatroom.turn_count = turn_count;
+
+      if (chatroom.turn_count > 0) {
         // 퀴즈 업데이트
         await this.quizService.updateQuiz({
           chatroomId: chatroom_id,
-          targetSequence: CHATBOT_TURN_COUNT - turn_count + 1,
+          targetSequence: CHATBOT_TURN_COUNT - chatroom.turn_count + 1,
           improvedQuiz: improved_quiz!,
         });
 
@@ -299,11 +313,9 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         );
       }
 
-      // 리액션 평가 - score평가, score평가 이후에 current_distance, heart_life 업데이트..
-      await this.chatroomService.updateDistanceWithChatbot(chatroom_id, score);
-
-      // 챗봇리액션
+      // 챗봇리액션 이후 turn_count가 0이면 고정텍스트메시지로 응답
       const reactionMessage = chatroom.turn_count === 0 ? LAST_FIXED_MESSAGE(user.nickname) : react;
+
       const response = {
         status: OK,
         data: {
@@ -317,23 +329,24 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
           score: score, // 리액션 점수:  1, 0
           chatbot_profile_image: `${S3_URL}/chatbots/${chatbot_id}/profile.png`,
           reaction_image:
-            turn_count === 0
+            chatroom.turn_count === 0
               ? null
               : score === 1
                 ? `${S3_URL}/chatbots/${chatbot_id}/reactions/positive.png`
                 : `${S3_URL}/chatbots/${chatbot_id}/reactions/negative.png`,
-          heart_life: heart_life,
-          current_distance: current_distance,
-          turn_count: turn_count,
+          heart_life: chatroom.heart_life,
+          current_distance: chatroom.current_distance,
+          turn_count: chatroom.turn_count,
         },
       };
 
       // 'answer' 이벤트를 수신하여 응답을 한다.
       client.emit('answer', response);
-
-      this.logger.log(`current_distance: ${chatroom.current_distance}`);
+      this.logger.log(`turn_count: ${chatroom.turn_count}`);
       this.logger.log(`heart_life: ${chatroom.heart_life}`);
-      if (turn_count > 0) {
+      this.logger.log(`current_distance: ${chatroom.current_distance}`);
+
+      if (chatroom.turn_count > 0) {
         // 'quiz' 이벤트를 발행하여 질문 메시지를 전송한다.
         client.emit('quiz', {
           status: OK,
@@ -347,8 +360,6 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
             chatroom_id: chatroom_id,
           },
         });
-
-        this.logger.log(`improved_quiz: ${improved_quiz}`);
       } else {
         // 마지막인경우는 소켓을 종료함으로써 채팅대화를 종료한다.
         this.logger.log('5번 턴 대화 끝 종료');
@@ -402,7 +413,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
     });
 
     if (error instanceof InAppropriateUserMessageException) {
-      this.logger.warn(`부적절한 에러가 감지되었어요. (chatroom_id: ${context.chatroom_id})`);
+      this.logger.warn(`부적절한 메시지가 감지되었어요 (chatroom_id: ${context.chatroom_id})`);
       client.emit('policy_error', {
         status: 'POLICY_ERROR',
         message: error.message || '부적절한 메시지가 감지되었습니다.',

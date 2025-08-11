@@ -44,7 +44,7 @@ export const convertConversation = (messages: Message[], user_answer: string) =>
   if (currentBotMessages.length > 0) result.push(currentBotMessages.join(' '));
 
   // 새로운 user_answer 추가
-  if (messages.length < 14) result.push(user_answer);
+  result.push(user_answer);
   return result;
 };
 
