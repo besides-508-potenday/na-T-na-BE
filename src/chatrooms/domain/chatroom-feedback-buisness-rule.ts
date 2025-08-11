@@ -17,16 +17,16 @@ export const RESULT_DISTANCE = (current_distance: number) => {
 export const CHATBOT_RESULT_IMAGE = (chatbot_id: number, heart_life: number) => {
   switch (heart_life) {
     case 0:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/results_0.png`;
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_0.png`;
     case 1:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/results_1.png`;
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_1.png`;
     case 2:
     case 3:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/results_2.png`;
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_2.png`;
     case 4:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/results_3.png`;
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_3.png`;
     case 5:
-      return `${S3_URL}/chatbots/${chatbot_id}/results/results_4.png`;
+      return `${S3_URL}/chatbots/${chatbot_id}/results/result_4.png`;
     default:
       throw new BadRequestException(
         '올바르지 않은 데이터입니다.',
