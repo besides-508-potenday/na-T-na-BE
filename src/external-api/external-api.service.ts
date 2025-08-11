@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import {
   InAppropriateUserMessageException,
@@ -18,6 +18,7 @@ import QuizList from 'src/quizes/domain/quiz-list.type';
 
 @Injectable()
 export class ExternalApiService {
+  private readonly logger = new Logger(ExternalApiService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly quizService: QuizesService,
@@ -100,9 +101,12 @@ export class ExternalApiService {
         ),
       );
 
+      this.logger.log(`✅ AI Server Response 응답확인 / 채팅방 id: ${request.chatroom_id}`);
+
       // 부적절 컨텍스트 감지
       if (result.data?.verification == false) {
-        throw new InAppropriateUserMessageException();
+        this.logger.warn(`❌ 부적절 컨텍스트 감지 / chatroom_id: ${request.chatroom_id}`);
+        throw new InAppropriateUserMessageException('부적절한 내용이 감지되었습니다.');
       }
 
       return {
@@ -112,9 +116,51 @@ export class ExternalApiService {
         verification: result.data?.verification,
       };
     } catch (error) {
+      if (error instanceof InAppropriateUserMessageException) {
+        throw error;
+      }
+      if (error.response) {
+        const { status, data } = error.response;
+        this.logger.error(
+          `AI 서버 [POST] /conversation API 호출하는데 실패하였습니다 [${status}]`,
+          {
+            chatroom_id: request.chatroom_id,
+            status,
+            data,
+            url: `${process.env.EXTERNAL_AI_SERVER_URL}/conversation`,
+          },
+        );
+
+        throw new InternalServiceErrorException(
+          `AI 서버 응답 오류 (${status}): ${data?.message || '알 수 없는 오류'}`,
+          { httpStatus: status, originalError: error },
+        );
+      }
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        this.logger.error(`AI Server Conncection Error:`, {
+          chatroom_id: request.chatroom_id,
+          code: error.code,
+          message: error.message,
+        });
+
+        throw new InternalServiceErrorException(
+          'AI 서버에 연결할 수 없습니다. 네트워크를 확인해주세요.',
+          {
+            connectionError: true,
+            originalError: error,
+          },
+        );
+      }
+
+      // 기타 예상하지 못한 에러
+      this.logger.error(`❌ Unexpected error in AI service`, {
+        chatroom_id: request.chatroom_id,
+        error: error.message,
+        stack: error.stack,
+      });
       throw new InternalServiceErrorException(
-        'AI 서버의 [POST] /conversation API 호출에 실패하였습니다.',
-        error,
+        'AI 서버와의 통신중 예상치 못한 오류가 발생했습니다.',
+        { originalError: error },
       );
     }
   }
@@ -169,9 +215,48 @@ export class ExternalApiService {
         audio_base64: result.data?.audio_base64,
       };
     } catch (error) {
+      if (error.response) {
+        const { status, data } = error.response;
+        this.logger.error(
+          `AI 서버 [POST] /conversation API 호출하는데 실패하였습니다 [${status}]`,
+          {
+            chatroom_id: request.chatroom_id,
+            status,
+            data,
+            url: `${process.env.EXTERNAL_AI_SERVER_URL}/conversation`,
+          },
+        );
+
+        throw new InternalServiceErrorException(
+          `AI 서버 응답 오류 (${status}): ${data?.message || '알 수 없는 오류'}`,
+          { httpStatus: status, originalError: error },
+        );
+      }
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        this.logger.error(`AI Server Conncection Error:`, {
+          chatroom_id: request.chatroom_id,
+          code: error.code,
+          message: error.message,
+        });
+
+        throw new InternalServiceErrorException(
+          'AI 서버에 연결할 수 없습니다. 네트워크를 확인해주세요.',
+          {
+            connectionError: true,
+            originalError: error,
+          },
+        );
+      }
+
+      // 기타 예상하지 못한 에러
+      this.logger.error(`❌ Unexpected error in AI service`, {
+        chatroom_id: request.chatroom_id,
+        error: error.message,
+        stack: error.stack,
+      });
       throw new InternalServiceErrorException(
-        'AI 서버의 [POST] /conversation API 호출에 실패하였습니다.',
-        error,
+        'AI 서버와의 통신중 예상치 못한 오류가 발생했습니다.',
+        { originalError: error },
       );
     }
   }

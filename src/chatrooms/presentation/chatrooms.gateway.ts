@@ -240,16 +240,29 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
 
       // [AI 서버에게 요청] /conversation
       // ai서버한테서 리액션과 신규퀴즈를 받는다
-      const conversationResponse =
-        await this.externalApiService.requestChatbotReactionFromConversation({
-          chatroom_id: chatroom_id,
-          chatbot_name: chatbot.name,
-          user_nickname: user.nickname,
-          current_distance: chatroom.current_distance,
-          messageConversations: messageConversations,
-          quizList: quizList.map((quiz) => quiz.quiz),
+      let conversationResponse;
+      try {
+        conversationResponse = await this.externalApiService.requestChatbotReactionFromConversation(
+          {
+            chatroom_id: chatroom_id,
+            chatbot_name: chatbot.name,
+            user_nickname: user.nickname,
+            current_distance: chatroom.current_distance,
+            messageConversations: messageConversations,
+            quizList: quizList.map((quiz) => quiz.quiz),
+          },
+        );
+      } catch (serviceError) {
+        // 서비스에서 발생한 에러를 명시적으로 처리
+        this.handleServiceError(client, serviceError, {
+          chatroom_id,
+          user_id,
+          chatbot_id,
         });
-      const { score, react, improved_quiz, verification } = conversationResponse;
+        return;
+      }
+
+      const { score, react, improved_quiz, verification } = conversationResponse!;
 
       // 유저메시지 저장
       await this.messageService.createMessage(
@@ -271,7 +284,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         // 챗봇리액션 메시지 저장
         await this.messageService.createMessage(
           chatroom_id,
-          react!,
+          react,
           SenderType.BOT,
           chatbot_id,
           user_id,
@@ -279,7 +292,7 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         // 새로운 퀴즈 메시지 저장
         await this.messageService.createMessage(
           chatroom_id,
-          improved_quiz!,
+          improved_quiz,
           SenderType.BOT,
           chatbot_id,
           user_id,
@@ -342,6 +355,8 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
         client.disconnect();
       }
     } catch (error) {
+      this.handleGatewayError(client, error, request);
+
       if (error instanceof InAppropriateUserMessageException) {
         // 부적절한 메시지 키워드 감지할 경우 -> 'policy_error' 이벤트를 발행하여 웹소켓으로 전송...
         client.emit('policy_error', {
@@ -370,6 +385,93 @@ export class ChatroomsGateway implements OnGatewayConnection, OnGatewayDisconnec
   /** 부적절한 메시지 검증 */
   private checkInvalidKeywords(message: string): void {
     const result = INVALID_MESSAGE_KEYWORDS.some((keyword) => message.includes(keyword));
-    if (result === true) throw new InAppropriateUserMessageException();
+    if (result === true)
+      throw new InAppropriateUserMessageException('메시지에 부적절한 키워드가 감지되었어요');
+  }
+
+  // 서비스에서 발생한 에러
+  private handleServiceError(
+    client: Socket,
+    error: any,
+    context: { chatroom_id: string; user_id: string; chatbot_id: number },
+  ) {
+    this.logger.error(`🚨 Service Error in chatroom (chatroom_id: ${context.chatroom_id})`, {
+      error: error.message,
+      stack: error.stack,
+      context,
+    });
+
+    if (error instanceof InAppropriateUserMessageException) {
+      this.logger.warn(`부적절한 에러가 감지되었어요. (chatroom_id: ${context.chatroom_id})`);
+      client.emit('policy_error', {
+        status: 'POLICY_ERROR',
+        message: error.message || '부적절한 메시지가 감지되었습니다.',
+        error_code: 'INAPPROPRIATE_MESSAGE',
+      });
+      return;
+    }
+    if (error instanceof MessageLengthOverMaximumException) {
+      this.logger.warn(`메시지 길이가 초과되었어요. (chatroom_id: ${context.chatroom_id})`);
+      client.emit('policy_error', {
+        status: 'POLICY_ERROR',
+        message: error.message || '메시지 길이는 최대 60자 입니다.',
+        error_code: 'MESSAGE_TOO_LONG',
+      });
+      return;
+    }
+    if (error instanceof InternalServiceErrorException) {
+      this.logger.error(
+        `External API Error in chatroom (chatroom_id: ${context.chatroom_id})`,
+        error,
+      );
+      client.emit('error', {
+        status: 'SERVICE_ERROR',
+        message: 'AI 서버와의 통신에 실패했습니다. 잠시후 다시 시도해주세요',
+        error_code: 'EXTERNAL_API_FAILED',
+        retryable: true,
+      });
+      return;
+    }
+    this.logger.error(`❌ Unexpected Error in chatroom (chatroom_id: ${context.chatroom_id})`, {
+      error: error.message,
+      stack: error.stack,
+      type: error.constructor.name,
+    });
+    client.emit('error', {
+      status: 'SERVICE_ERROR',
+      message: '예상치 못한 오류가 발생했습니다.',
+      error_code: 'UNEXPECTED_ERROR',
+      retryable: false,
+    });
+  }
+  // 게이트웨이 레벨 에러 핸들러
+  private handleGatewayError(client: Socket, error: any, request: AnswerRequest) {
+    this.logger.error(`🔴 Gateway Error:`, {
+      error: error.message,
+      stack: error.stack,
+      request: {
+        chatroom_id: request.chatroom_id,
+        user_id: request.user_id,
+        message_length: request.message?.length,
+      },
+    });
+
+    if (error instanceof ResourceNotFoundException) {
+      client.emit('service_error', {
+        status: 'SERVICE_ERROR',
+        message: error.message,
+        error_code: 'RESOURCE_NOT_FOUND',
+        retryable: false,
+      });
+      return;
+    }
+
+    // 기타 게이트웨이 에러
+    client.emit('service_error', {
+      status: 'SERVICE_ERROR',
+      message: '서버에서 오류가 발생했습니다.',
+      error_code: 'GATEWAY_ERROR',
+      retryable: true,
+    });
   }
 }
