@@ -31,7 +31,7 @@ export class ChatbotsService {
 
   /** 채팅방 고유식별자로(chatroom_id)로 챗봇조회하기 */
   async getChatbotByChatroomId(chatroomId: string) {
-    const chatbot = await this.chatbotRepository.getChatbotByChatbotId(chatroomId);
+    const chatbot = await this.chatbotRepository.getChatbotByChatroomId(chatroomId);
     return chatbot;
   }
 }

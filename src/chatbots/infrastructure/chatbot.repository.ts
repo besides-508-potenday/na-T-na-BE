@@ -17,7 +17,7 @@ export class ChatbotRepositoryImpl implements IChatbotRepository {
     });
     return chatbot;
   }
-  async getChatbotByChatbotId(chatroomId: string) {
+  async getChatbotByChatroomId(chatroomId: string) {
     return await this.prisma.chatroomParticipant.findFirst({
       where: {
         chatroom_id: chatroomId,
