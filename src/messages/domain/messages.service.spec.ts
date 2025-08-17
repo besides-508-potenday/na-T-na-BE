@@ -224,6 +224,7 @@ describe('MessagesService', () => {
         '답변4',
 
         '퀴즈4-답변-리액션' + ' ' + '퀴즈5',
+        answer,
       ];
       const result = convertConversation(messages, answer);
       expect(result).toEqual(expectedConversation);
