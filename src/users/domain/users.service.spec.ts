@@ -4,6 +4,7 @@ import { UsersService } from './users.service';
 const mockUserRepositoryImpl = {
   createUser: jest.fn(),
   getOneUserById: jest.fn(),
+  getUserByChatroomId: jest.fn(),
 };
 
 describe('UsersService', () => {
@@ -23,26 +24,87 @@ describe('UsersService', () => {
     jest.clearAllMocks();
   });
 
-  it('createUser(): 유저 생성할 수 있다', () => {
-    const nickname = '투닥이';
-    const mockUser = { id: 'test-uuid', nickname: nickname };
-    userRepository.createUser.mockReturnValue(mockUser);
+  describe('getUserByChatroomId', () => {
+    it('채팅룸 식별자로 참여한 유저조회에 성공한다', async () => {
+      // arrange
+      const chatroomId = 'existed-chatroom-uuid';
+      const mockResult = {
+        user: {
+          id: 'example-user-uuid',
+          nickname: '테스트',
+        },
+        id: 'chatroom-participant-uuid',
+        chatroom_id: chatroomId,
+        user_id: 'example-user-uuid',
+        chatbot_id: 1,
+      };
+      userRepository.getUserByChatroomId.mockReturnValue(mockResult);
 
-    const result = userRepository.createUser(nickname);
-    expect(result.nickname).toEqual(nickname);
+      // act
+      const result = await service.getUserByChatroomId(chatroomId);
 
-    expect(userRepository.createUser).toHaveBeenCalledWith(nickname);
+      // assert
+      expect(result.user).toBeDefined();
+      expect(result.user.nickname).toEqual('테스트');
+      expect(result.chatroom_id).toEqual(chatroomId);
+      expect(userRepository.getUserByChatroomId).toHaveBeenCalledWith(chatroomId);
+    });
+    it('채팅룸 식별자로 유저를 조회할 수 없으면 null을 리턴한다', async () => {
+      // arrange
+      const chatroomId = 'not-existed-chatroom-uuid';
+      userRepository.getUserByChatroomId.mockReturnValue(null);
+
+      // act
+      const result = await service.getUserByChatroomId(chatroomId);
+
+      // assert
+      expect(result).toBeNull();
+      expect(userRepository.getUserByChatroomId).toHaveBeenCalledWith(chatroomId);
+    });
+  });
+  describe('createUser', () => {
+    it('신규 유저 생성을 성공한다', async () => {
+      // arrange
+      const nickname = '나티나';
+      const mockUser = { id: 'test-uuid', nickname: nickname };
+      userRepository.createUser.mockReturnValue(mockUser);
+
+      // act
+      const result = await service.createUser(nickname);
+
+      // assert
+      expect(result.id).toEqual('test-uuid');
+      expect(result.nickname).toEqual(nickname);
+      expect(userRepository.createUser).toHaveBeenCalledWith(nickname);
+    });
   });
 
-  it('getUserById(): 고유식별자로 단일 유저를 조회할 수 있다.', () => {
-    const id = '1234';
-    const mockUser = { id: 'test-uuid', nickname: '투닥이' };
-    userRepository.getOneUserById.mockReturnValue(mockUser);
+  describe('getUserById', () => {
+    it('유저의 고유식별자로 단일 유저를 조회에 성공한다', async () => {
+      // arrange
+      const id = 'test-uuid';
+      const mockUser = { id: 'test-uuid', nickname: '나티나' };
+      userRepository.getOneUserById.mockReturnValue(mockUser);
 
-    const result = userRepository.getOneUserById(id);
-    expect(result.nickname).toEqual('투닥이');
-    expect(result.id).toEqual('test-uuid');
+      // act
+      const result = await service.getOneUser(id);
 
+      // assert
+      expect(result.id).toEqual(id);
+      expect(result.nickname).toEqual('나티나');
+      expect(userRepository.getOneUserById).toHaveBeenCalledWith(id);
+    });
+  });
+  it('유저 고유식별자로 유저 조회가 되지 않을 경우 null을 반환한다', async () => {
+    // arrange
+    const id = 'not-existed-user-uuid';
+    userRepository.getOneUserById.mockReturnValue(null);
+
+    // act
+    const result = await service.getOneUser(id);
+
+    // assert
+    expect(result).toBeNull();
     expect(userRepository.getOneUserById).toHaveBeenCalledWith(id);
   });
 });
