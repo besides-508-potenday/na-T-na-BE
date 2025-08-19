@@ -66,9 +66,7 @@ export class ExternalApiService {
   }
 
   /**
-   * AI 서버의 "/conversation" 을 호출하여
-   * @param data
-   * @returns
+   * AI 서버의 "/conversation" 을 호출
    */
   async requestChatbotReactionFromConversation(request: {
     chatbot_name: string;
