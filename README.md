@@ -3,7 +3,7 @@
 ![na-t-na-intro](./docs/na-t-na-intro.png)
 
 > 프로젝트 시연영상
-> ![na-t-na-preview](./docs/na-t-na-preview.mp4)
+> ![na-t-na-preview](./docs/na-t-na-preview.gif)
 
 > 백엔드 파트 사용 기술스택
 
