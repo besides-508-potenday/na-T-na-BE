@@ -1,6 +1,206 @@
-## Project setup
+## 프로젝트 소개
 
-- @loveAlakazam 에게 .env파일을 전달 요청한다.
+![na-t-na-intro](./docs/na-t-na-intro.png)
+
+- 백엔드 파트 사용 기술스택
+  - Language / Framework / Package-Manager: ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white) ![Yarn](https://img.shields.io/badge/yarn-%232C8EBB.svg?style=for-the-badge&logo=yarn&logoColor=white)
+  - Web Socket: ![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
+  - Testing: ![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
+  - RDBMS / NoSQL: ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white) ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+  - Cloud: ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+    - EC2, ALB(Application Load Balancer), Route53, ACM, S3, VPC
+  - CI/CD: ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) ![PM2](https://img.shields.io/badge/PM2-%232B037A?style=for-the-badge&logo=PM2&logoColor=white)
+
+---
+
+## 설계
+
+### ERD 다이어그램
+
+### 시퀀스 다이어그램
+
+---
+
+## 프로젝트 구조
+
+- 7개의 도메인을 주축으로 모듈생성
+  비즈니스를 이루는 도메인은 `Chatbot`, `Chatroom`, `Message`, `Quiz`, `External-API`,`Quiz`, `User` 으로 각 7개는 독립적인 모듈과 프로바이더로 구성되어있습니다.
+
+- 클린아키텍쳐와 레이어드아키텍쳐을 모델로 프로젝트의 각 도메인별 계층을 구성하였습니다.
+- 각 도메인에는 `domain`, `presentation`, `infrastructure` 3개의 계층을 갖고있습니다.
+  - `domain`
+    - 해당 도메인의 비즈니스룰과 핵심을 나타냅니다.
+    - 서비스로직, 비즈니스규칙, 래포지토리 인터페이스, 서비스 unit-test 로 구성되어있습니다.
+  - `presentation`
+    - 컨트롤러(REST API), 게이트웨이(Web-Socket) 등 에 해당되며, API요청할때 먼저 접근되는 프레젠테이션 및 이벤트/URL 라우팅 계층을 의미합니다.
+  - `infrastructure`
+    - 도메인계층에서는 래포지토리 인터페이스이며, 인터페이스의 실제 구현체를 의미합니다. 데이터베이스와 연결된 ORM을 이용하여 query에 알맞는 리스폰스를 응답합니다.
+
+```bash
+chatbots
+├─ chatbots.module.ts
+├─ domain
+│  ├─ chatbot-with-personalities.type.ts
+│  ├─ chatbot.policy.ts
+│  ├─ chatbot.repository.interface.ts
+│  ├─ chatbots.service.test.ts
+│  └─ chatbots.service.ts
+├─ infrastructure
+│  └─ chatbot.repository.ts
+└─ presentation
+   ├─ chatbots.controller.ts
+   └─ dto
+        └─ get-chatbots.response.dto.ts
+```
+
+- 전체 프로젝트 구조
+
+```bash
+📦
+├─ .dockerignore
+├─ .env.test
+├─ .github
+│  └─ workflows
+│     ├─ deploy-production.yml
+│     └─ test.yml
+├─ .gitignore
+├─ .prettierrc
+├─ .vscode
+│  └─ launch.json
+├─ Dockerfile
+├─ README.md
+├─ docker-compose.yml
+├─ eslint.config.mjs
+├─ jest.config.json
+├─ nest-cli.json
+├─ package.json
+├─ prisma
+│  ├─ first-chatbot-seeds.ts
+│  └─ schema.prisma
+├─ src
+│  ├─ app.controller.spec.ts
+│  ├─ app.controller.ts
+│  ├─ app.module.ts
+│  ├─ app.service.ts
+│  │
+│  ├─ chatbots
+│  │  ├─ chatbots.module.ts
+│  │  ├─ domain
+│  │  │  ├─ chatbot-with-personalities.type.ts
+│  │  │  ├─ chatbot.policy.ts
+│  │  │  ├─ chatbot.repository.interface.ts
+│  │  │  ├─ chatbots.service.test.ts
+│  │  │  └─ chatbots.service.ts
+│  │  ├─ infrastructure
+│  │  │  └─ chatbot.repository.ts
+│  │  └─ presentation
+│  │     ├─ chatbots.controller.ts
+│  │     └─ dto
+│  │        └─ get-chatbots.response.dto.ts
+│  │
+│  ├─ chatrooms
+│  │  ├─ chatrooms.module.ts
+│  │  ├─ domain
+│  │  │  ├─ chatroom-feedback-buisness-rule.ts
+│  │  │  ├─ chatroom.repository.interface.ts
+│  │  │  ├─ chatrooms.service.spec.ts
+│  │  │  ├─ chatrooms.service.ts
+│  │  │  └─ chatting-socket-business-rule.ts
+│  │  ├─ infrastructure
+│  │  │  └─ chatroom.repository.ts
+│  │  └─ presentation
+│  │     ├─ chatrooms.controller.ts
+│  │     ├─ chatrooms.gateway.ts
+│  │     └─ dto
+│  │        ├─ answer.dto.ts
+│  │        ├─ get-last-letter.dto.ts
+│  │        └─ join-room.dto.ts
+│  │
+│  ├─ common
+│  │  ├─ S3_URL.ts
+│  │  ├─ common.module.ts
+│  │  ├─ custom-exceptions
+│  │  │  ├─ base-custom-exception.ts
+│  │  │  └─ policy-errors.ts
+│  │  ├─ global-exception.filter.ts
+│  │  ├─ swagger-mock-api.service.ts
+│  │  ├─ swagger-mock.interceptor.spec.ts
+│  │  └─ swagger-mock.interceptor.ts
+│  │
+│  ├─ external-api
+│  │  ├─ dto
+│  │  │  ├─ request-chatbot-reaction-from-conversation.dto.ts
+│  │  │  ├─ request-create-situation.dto.ts
+│  │  │  └─ request-feedback.dto.ts
+│  │  ├─ external-api.module.ts
+│  │  ├─ external-api.service.spec.ts
+│  │  └─ external-api.service.ts
+│  │
+│  ├─ main.ts
+│  │
+│  ├─ messages
+│  │  ├─ domain
+│  │  │  ├─ message-business-rule.ts
+│  │  │  ├─ message.cache-store.interface.ts
+│  │  │  ├─ message.repository.interface.ts
+│  │  │  ├─ message.type.ts
+│  │  │  ├─ messages.service.spec.ts
+│  │  │  └─ messages.service.ts
+│  │  ├─ infrastructure
+│  │  │  ├─ message.cache-store.ts
+│  │  │  └─ message.repository.ts
+│  │  └─ messages.module.ts
+│  │
+│  ├─ prisma
+│  │  ├─ prisma.module.ts
+│  │  └─ prisma.service.ts
+│  │
+│  ├─ quizes
+│  │  ├─ domain
+│  │  │  ├─ dto
+│  │  │  │  └─ update-quiz.dto.ts
+│  │  │  ├─ quiz-list.type.ts
+│  │  │  ├─ quiz.cache-store.interface.ts
+│  │  │  ├─ quiz.repository.interface.ts
+│  │  │  ├─ quizes.service.spec.ts
+│  │  │  └─ quizes.service.ts
+│  │  ├─ infrastructure
+│  │  │  ├─ quiz.cache-store.ts
+│  │  │  └─ quiz.repository.ts
+│  │  └─ quizes.module.ts
+│  │
+│  ├─ redis
+│  │  ├─ redis.module.ts
+│  │  ├─ redis.service-integration.test.ts
+│  │  ├─ redis.service.interface.ts
+│  │  └─ redis.service.ts
+│  │
+│  └─ users
+│     ├─ domain
+│     │  ├─ create-user.dto.ts
+│     │  ├─ user.policy.ts
+│     │  ├─ user.repository.interface.ts
+│     │  ├─ users.service.spec.ts
+│     │  └─ users.service.ts
+│     ├─ infrastructure
+│     │  └─ user.repository.ts
+│     ├─ presentation
+│     │  └─ users.controller.ts
+│     └─ users.module.ts
+├─ test
+│  └─ jest-e2e.json
+├─ tsconfig.build.json
+├─ tsconfig.json
+└─ yarn.lock
+
+```
+
+### 백엔드 API 설명
+
+---
+
+## 프로젝트 셋팅업
+
 - 도커실행을 하게되면 아래 명령어로 로컬환경 도커 셋팅을 한다.
 
 ```bash
@@ -26,68 +226,21 @@ npx prisma db push
 npx prisma db seed
 ```
 
-## Compile and run the project
+## 프로젝트 실행
 
 ```bash
-# development
+# 일반 실행
 $ yarn run start
 
-# watch mode
+# 개발모드
 $ yarn run start:dev
 
-# production mode
-$ yarn run start:prod
 ```
 
-## Run tests
+## 단위테스트 케이스 실행
 
 ```bash
 # unit tests
 $ yarn run test
 
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
 ```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-yarn install -g mau
-mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
