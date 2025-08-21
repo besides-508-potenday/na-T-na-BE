@@ -103,7 +103,7 @@
 ## 프로젝트 구조
 
 - 7개의 도메인을 주축으로 모듈생성
-  비즈니스를 이루는 도메인은 `Chatbot`, `Chatroom`, `Message`, `Quiz`, `External-API`,`Quiz`, `User` 으로 각 7개는 독립적인 모듈과 프로바이더로 구성되어있습니다.
+  비즈니스를 이루는 도메인은 `Chatbot`, `Chatroom`, `Message`, `Quiz`,`Quiz`, `User` 으로 각 6개는 독립적인 모듈과 프로바이더로 구성되어있습니다.
 
 - 클린아키텍쳐와 레이어드아키텍쳐을 모델로 프로젝트의 각 도메인별 계층을 구성하였습니다.
 - 각 도메인에는 `domain`, `presentation`, `infrastructure` 3개의 계층을 갖고있습니다.
