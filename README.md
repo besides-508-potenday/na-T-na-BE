@@ -56,19 +56,21 @@
 
 ### 채팅방 입장 프로세스
 
+![sequence-join-room](./docs/sequence-join-room.png)
+
 <br><br>
 
 ### 챗봇 질문에 대한 사용자 응답 프로세스
 
 > 첫번째 질문(quiz)에 대한 사용자 답변과 챗봇 리액션 진행 프로세스
 
-<br>
-
-> 두번째 질문(quiz)에 대한 사용자 답변과 챗봇 리액션 진행 프로세스
+![sequence-conversation-01](./docs/sequence-conversation-01.png)
 
 <br>
 
 > 마지막 질문(5번째 질문)에 대한 사용자 답변과 챗봇 리액션 진행 프로세스
+
+![sequence-conversation-02](./docs/sequence-conversation-02.png)
 
 <br><br>
 
