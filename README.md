@@ -20,7 +20,7 @@
 
 > 프로젝트 시연영상
 
-![na-t-na-preview](./docs/na-T-na-preview.gif)
+![](https://github.com/user-attachments/assets/03562005-99b1-4b57-83d9-137b84915be5)
 
 <br>
 
