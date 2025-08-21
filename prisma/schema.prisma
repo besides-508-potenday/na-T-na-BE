@@ -36,25 +36,6 @@ model Chatbot {
   messages ChatMessage[] // 1:N
 }
 
-// model Personality {
-//   id Int @id @default(autoincrement())
-//   name String @unique
-
-//   // 외래키 관계
-//   chatbots ChatbotPersonality[] @relation("personality_to_chatbot")
-// }
-
-/* 챗봇/성격 연결 테이블 */
-// model ChatbotPersonality {
-//   id Int @id @default(autoincrement())
-//   chatbot_id Int
-//   personality_id Int
-
-//   // 외래키
-//   chatbot Chatbot @relation(fields: [chatbot_id],references: [id], name: "chatbot_to_personality")
-//   personality Personality @relation(fields: [personality_id], references: [id], name: "personality_to_chatbot")
-// }
-
 
 model Chatroom {
   id String @id @default(uuid())

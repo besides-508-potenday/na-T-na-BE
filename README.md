@@ -3,7 +3,10 @@
 ![na-t-na-intro](./docs/na-t-na-intro.png)
 
 > 프로젝트 시연영상
-> ![na-t-na-preview](./docs/na-t-na-preview.gif)
+
+![na-t-na-preview](./docs/na-t-na-preview.gif)
+
+<br>
 
 > 백엔드 파트 사용 기술스택
 
@@ -20,6 +23,12 @@
 ## 설계
 
 ### ERD 다이어그램
+
+![domain-relations](./docs/domain-relations.png)
+
+- [dbdiagram link - Na-T-Na ERD](https://dbdiagram.io/d/na-T-na-BE-ERD-688b84b6cca18e685caf46b2)
+
+![na-t-na-erd](./docs/na-T-na-BE-ERD.png)
 
 ### 시퀀스 다이어그램
 

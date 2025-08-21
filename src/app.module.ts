@@ -3,7 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { CommonModule } from './common/common.module';
-import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { SwaggerMockInterceptor } from './common/swagger-mock.interceptor';
@@ -20,7 +19,6 @@ import { RedisModule } from './redis/redis.module';
   imports: [
     UsersModule,
     CommonModule,
-    AuthModule,
     PrismaModule,
     TerminusModule,
     ChatbotsModule,
