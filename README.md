@@ -10,7 +10,10 @@
   - [챗봇의 마지막편지](#챗봇의-마지막편지)
 - [프로젝트 구조](#프로젝트-구조)
   - [전체 프로젝트 파일 구조](#전체-프로젝트-파일-구조)
-  - [백엔드 API 설명](#백엔드-api-설명)
+- [REST API 정의서](#rest-api-정의서)
+  - [챗봇목록 조회](#챗봇목록-조회)
+  - [챗봇 마지막 편지 조회](#챗봇-마지막-편지-조회)
+- [Websocket 이벤트에 대한 응답](#websocket-이벤트에-대한-응답)
 - [프로젝트 셋팅 방법](#프로젝트-셋팅-방법)
   - [프로젝트 초기 셋팅](#프로젝트-초기-셋팅)
   - [프로젝트 실행](#프로젝트-실행)
@@ -24,9 +27,7 @@
 
 > 프로젝트 시연영상
 
-
-https://github.com/user-attachments/assets/d3375fd6-f3cd-4e8f-a110-ff36fb10ef76
-
+<https://github.com/user-attachments/assets/d3375fd6-f3cd-4e8f-a110-ff36fb10ef76>
 
 <br>
 
@@ -276,7 +277,98 @@ chatbots
 
 ```
 
-### 백엔드 API 설명
+---
+
+## REST API 정의서
+
+### 챗봇목록 조회
+
+| Method | URL             | 목적          |
+| ------ | --------------- | ------------- |
+| GET    | `/api/chatbots` | 챗봇목록 조회 |
+
+> 예시 응답데이터
+
+```json
+{
+  "chatbots": [
+    {
+      "chatbot_id": 1,
+      "chatbot_profile_image": "{S3-URL}/chatbots/1/profile.png",
+      "chatbot_name": "투닥이",
+      "chatbot_personalities": "당신의 이야기에 감정 200% 몰입",
+      "chatbot_speciality": "공감 스킬 향상을 위한 조력 메이트",
+      "is_unknown": false
+    },
+    {
+      "chatbot_id": 2,
+      "chatbot_profile_image": "{S3-URL}/chatbots/2/unknown.png",
+      "chatbot_name": "썸고수_???",
+      "chatbot_personalities": "???",
+      "chatbot_speciality": "연애 공감 시뮬레이션",
+      "is_unknown": true
+    }
+  ]
+}
+```
+
+### 챗봇 마지막 편지 조회
+
+| Method | URL                                                                     | 목적                   |
+| ------ | ----------------------------------------------------------------------- | ---------------------- |
+| GET    | `/api/chatrooms/{chatroom_id}/letters`<br />- chatroom_id: uuid(string) | 챗봇의 마지막편지 조회 |
+
+> 예시 응답 데이터
+
+```json
+{
+  "chatroom_id": "{uuid}",
+  "is_finished": true,
+  "current_distance": 10,
+  "letter": "{투닥이가 보내는 편지 내용}",
+  "user_nickname": "사용자 닉네임",
+  "chatbot_name": "투닥이",
+  "chatbot_id": 1,
+  "from_chatbot": "힘들었던 하루 끝에, \n 투닥이"
+  "letter_mp3": "{S3-URL}/chatrooms/results/{chatroom_id}/letter_voice.mp3",
+  "chatbot_result_image": "{S3-URL}/chatbots/{chatbot_id}/results/result_0.png"
+}
+```
+
+<br>
+
+> 설명
+
+| 필드명               | 데이터 타입  | 정의                                                          |
+| -------------------- | ------------ | ------------------------------------------------------------- |
+| chatroom_id          | string(uuid) | 채팅방 PK                                                     |
+| is_finished          | boolean      | 편지지작성 완료 여부 - 작성완료: true - 미완성(채팅중): false |
+| current_distance     | int          | 챗봇과의 사이거리                                             |
+| letter               | string       | 마지막 편지 내용                                              |
+| user_nickname        | string       | 사용자 닉네임                                                 |
+| chatbot_id           | int          | 챗봇 PK                                                       |
+| chatbot_name         | string       | 챗봇 이름                                                     |
+| letter_mp3           | string(url)  | 마지막 편지 내용 음성파일 url                                 |
+| chatbot_result_image | string(url)  | 마지막 편지 결과 이미지 url                                   |
+| from_chatbot         | string       | {AI작성 마지막 안부인사},{챗봇명}                             |
+
+<br>
+
+> 챗봇 결과이미지 파일(chatbot_result_image) 조건
+
+| 하트개수<br />heart_life | 챗봇과의 거리<br />(current_distance) | 챗봇결과 이미지파일<br />chatbot_result_image | 설명                          |
+| :----------------------: | ------------------------------------- | --------------------------------------------- | ----------------------------- |
+|            0             | 5                                     | result_0.png                                  | 챗봇과 사이거리가 가장 멀다   |
+|            1             | 4                                     | result_1.png                                  |                               |
+|           2~3            | 3~2                                   | result_2.png                                  |                               |
+|            4             | 1                                     | result_3.png                                  |                               |
+|            5             | 0                                     | result_4.png                                  | 챗봇과 사이거리가 가장 가깝다 |
+
+---
+
+## Websocket 이벤트에 대한 응답
+
+(tbd)
 
 ---
 
