@@ -24,7 +24,9 @@
 
 > 프로젝트 시연영상
 
-![](https://github.com/user-attachments/assets/03562005-99b1-4b57-83d9-137b84915be5)
+
+https://github.com/user-attachments/assets/d3375fd6-f3cd-4e8f-a110-ff36fb10ef76
+
 
 <br>
 
