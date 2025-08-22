@@ -9,6 +9,7 @@ const mockChatroomRepositoryImpl = {
   positiveChatbotReaction: jest.fn(),
   negativeChatbotReaction: jest.fn(),
   updateTurnCount: jest.fn(),
+  updateLetter: jest.fn(),
 };
 
 describe('ChatroomsService', () => {
@@ -19,7 +20,7 @@ describe('ChatroomsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatroomsService,
-        { provide: 'IChatroomRepository', useValue: ChatroomRepositoryImpl },
+        { provide: 'IChatroomRepository', useValue: mockChatroomRepositoryImpl },
       ],
     }).compile();
 
@@ -30,6 +31,39 @@ describe('ChatroomsService', () => {
     jest.clearAllMocks();
   });
 
+  describe('updateLetter', () => {
+    it('마지막편지의 상태가 변경되고, 변경된 채팅방 정보를 반환한다', async () => {
+      // arrange
+      const chatroomId = 'test-chatroom-id';
+      const command = {
+        chatroom_id: chatroomId,
+        is_finished: true,
+        letter: '마지막 편지 내용',
+        from_chatbot: '언제나 너를 응원하는 친구, \n투닥이 가',
+      };
+      const mockChatroom = {
+        id: chatroomId,
+        letter: '마지막 편지 내용',
+        from_chatbot: '언제나 너를 응원하는 친구, \n투닥이 가',
+        is_finished: true,
+      };
+
+      // Promise<void> 반환하므로 mockResolvedValueOnce(undefined)를 호출
+      chatroomRepository.updateLetter.mockReturnValueOnce(undefined);
+      chatroomRepository.findChatroomById.mockReturnValue(mockChatroom);
+
+      // act
+      const result = await service.updateLetter(command);
+
+      // assert
+      expect(chatroomRepository.updateLetter).toHaveBeenCalledWith(command);
+      expect(result.letter).toEqual(command.letter);
+      expect(result.is_finished).toBeTruthy();
+      expect(result.from_chatbot).toEqual(command.from_chatbot);
+      expect(result).toEqual(mockChatroom);
+    });
+  });
+
   describe('createChatroom', () => {
     it('createChatroom(): 채팅방생성을 성공한다', async () => {
       // arrange
@@ -37,8 +71,8 @@ describe('ChatroomsService', () => {
       const userId = 'tst-user-id';
       const chatbotId = 1;
 
-      chatroomRepository.createChatroom = jest.fn().mockReturnValue(mockChatroom);
-      chatroomRepository.createChatroomParticipants = jest.fn().mockReturnValue({
+      chatroomRepository.createChatroom.mockReturnValue(mockChatroom);
+      chatroomRepository.createChatroomParticipants.mockReturnValue({
         user_id: userId,
         chatbot_id: chatbotId,
         chatroom_id: mockChatroom.id,
@@ -61,7 +95,7 @@ describe('ChatroomsService', () => {
     it('1. 채팅방이 존재하지 않으면 ResourceNotFoundException 예외를 발생한다', () => {
       // arrange
       const chatroomId = 'not-exist-id';
-      chatroomRepository.findChatroomById = jest.fn().mockReturnValue(null);
+      chatroomRepository.findChatroomById.mockReturnValue(null);
 
       // act & assert
       expect(service.updateChatTurnCounts(chatroomId)).rejects.toThrow(
@@ -74,10 +108,8 @@ describe('ChatroomsService', () => {
       const mockChatroom = { id: chatroomId, turn_count: 10 };
 
       // act
-      chatroomRepository.findChatroomById = jest.fn().mockReturnValue(mockChatroom);
-      chatroomRepository.updateTurnCount = jest
-        .fn()
-        .mockReturnValue({ ...mockChatroom, turn_count: 9 });
+      chatroomRepository.findChatroomById.mockReturnValue(mockChatroom);
+      chatroomRepository.updateTurnCount.mockReturnValue({ ...mockChatroom, turn_count: 9 });
 
       // assert
       await service.updateChatTurnCounts(chatroomId);
@@ -93,10 +125,8 @@ describe('ChatroomsService', () => {
       const mockChatroom = { id: chatroomId, turn_count: 0 };
 
       // act
-      chatroomRepository.findChatroomById = jest.fn().mockReturnValue(mockChatroom);
-      chatroomRepository.updateTurnCount = jest
-        .fn()
-        .mockReturnValue({ ...mockChatroom, turn_count: 0 });
+      chatroomRepository.findChatroomById.mockReturnValue(mockChatroom);
+      chatroomRepository.updateTurnCount.mockReturnValue({ ...mockChatroom, turn_count: 0 });
 
       // assert
       await service.updateChatTurnCounts(chatroomId);
@@ -117,8 +147,8 @@ describe('ChatroomsService', () => {
         turn_count: 5,
         current_distance: 5,
       };
-      chatroomRepository.findChatroomById = jest.fn().mockResolvedValue(mockChatroom);
-      chatroomRepository.negativeChatbotReaction = jest.fn().mockResolvedValue({
+      chatroomRepository.findChatroomById.mockResolvedValue(mockChatroom);
+      chatroomRepository.negativeChatbotReaction.mockResolvedValue({
         ...mockChatroom,
         heart_life: mockChatroom.heart_life - 1,
         turn_count: mockChatroom.turn_count - 1,
@@ -140,8 +170,8 @@ describe('ChatroomsService', () => {
         turn_count: 5,
         current_distance: 5,
       };
-      chatroomRepository.findChatroomById = jest.fn().mockResolvedValue(mockChatroom);
-      chatroomRepository.negativeChatbotReaction = jest.fn().mockResolvedValue({
+      chatroomRepository.findChatroomById.mockResolvedValue(mockChatroom);
+      chatroomRepository.negativeChatbotReaction.mockResolvedValue({
         ...mockChatroom,
         current_distance: mockChatroom.current_distance - 1,
         turn_count: mockChatroom.turn_count - 1,
@@ -179,7 +209,7 @@ describe('ChatroomsService', () => {
           chatroom_id: chatroomId,
         })),
       };
-      chatroomRepository.findChatroomById = jest.fn().mockResolvedValue(mockChatroom);
+      chatroomRepository.findChatroomById.mockResolvedValue(mockChatroom);
 
       // act
       const result = await service.getChatroomById(chatroomId);

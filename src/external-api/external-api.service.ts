@@ -66,9 +66,7 @@ export class ExternalApiService {
   }
 
   /**
-   * AI 서버의 "/conversation" 을 호출하여
-   * @param data
-   * @returns
+   * AI 서버의 "/conversation" 을 호출
    */
   async requestChatbotReactionFromConversation(request: {
     chatbot_name: string;
@@ -181,8 +179,8 @@ export class ExternalApiService {
        *    "(리액션 1) + (변경된 퀴즈 2)",
        *    "퀴즈 2 사용자 대답",
        *     ...
-       *    "(리액션 9) + (변경된 퀴즈 10)",
-       *    "퀴즈 10 사용자 대답"
+       *    "(리액션 4) + (변경된 퀴즈 5)",
+       *    "퀴즈 5 사용자 대답"
        * ]
        */
 
