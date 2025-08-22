@@ -13,7 +13,11 @@
 - [REST API 정의서](#rest-api-정의서)
   - [챗봇목록 조회](#챗봇목록-조회)
   - [챗봇 마지막 편지 조회](#챗봇-마지막-편지-조회)
-- [Websocket 이벤트에 대한 응답](#websocket-이벤트에-대한-응답)
+- [Websocket 이벤트 정의서](#websocket-이벤트-정의서)
+  - [`join_room` 이벤트](#join_room-이벤트)
+  - [`answer` 이벤트](#answer-이벤트)
+  - [`quiz` 이벤트](#quiz-이벤트)
+  - [`policy_error` 이벤트](#policy_error-이벤트)
 - [프로젝트 셋팅 방법](#프로젝트-셋팅-방법)
   - [프로젝트 초기 셋팅](#프로젝트-초기-셋팅)
   - [프로젝트 실행](#프로젝트-실행)
@@ -366,9 +370,200 @@ chatbots
 
 ---
 
-## Websocket 이벤트에 대한 응답
+## Websocket 이벤트 정의서
 
-(tbd)
+### `join_room` 이벤트
+
+- 클라이언트(사용자)가 채팅방에 입장하게되면 join_room 이벤트를 발행합니다.
+- 서버에서는 join_room 이벤트를 수신하여 응답을 합니다.
+
+> Request
+>
+> - 설명
+
+| 필드명        | 데이터 타입 | 정의                              |
+| ------------- | ----------- | --------------------------------- |
+| user_nickname | string      | 사용자 닉네임                     |
+| chatbot_id    | int         | 챗봇 PK : 사용자가 선택한 챗봇 PK |
+
+> - 예시 요청 데이터
+
+```json
+{
+  "user_nickname": "유저 닉네임",
+  "chatbot_id": 1
+}
+```
+
+<br>
+
+> Response
+>
+> - 설명
+
+| 필드명           | 데이터 타입  | 정의                                            |
+| ---------------- | ------------ | ----------------------------------------------- |
+| chatroom_id      | string(uuid) | 채팅방 PK                                       |
+| user_id          | string(uuid) | 사용자 PK                                       |
+| user_nickname    | string       | 사용자 닉네임                                   |
+| chatbot_id       | int          | 챗봇 PK                                         |
+| chatbot_name     | string       | 챗봇 이름                                       |
+| current_distance | int          | 챗봇과의 거리 <br />- 채팅 첫 입장시 초기값: 10 |
+| heart_life       | int          | 분홍 하트개수 <br />- 채팅 첫 입장시 초기값: 10 |
+| sender_type      | string       | 전송주체 <br />- 챗봇: BOT<br />- 사용자: USER  |
+| turn_count       | int          | 앞으로 챗봇의 대화 가능 횟수                    |
+
+> - 예시 응답 데이터
+
+```json
+{
+  "user_id": "{uuid}",
+  "user_nickname": "사용자 닉네임",
+  "chatbot_id": 1,
+  "chatroom_id": "{uuid}",
+  "chatbot_name": "투닥이",
+  "current_distance": 5,
+  "heart_life": 5,
+  "sender_type": "BOT",
+  "message": "저기.. {user_nickname}..! 잘지냈어? 혹시 내가 할말이 있는데 들어줄래?",
+  "chatbot_profile_image": "{S3-URL}/chatbots/{chatbot_id}/profile.png",
+  "turn_count": 5
+}
+```
+
+### `answer` 이벤트
+
+- 클라이언트(사용자)는 퀴즈에 대한 답변을 함으로써, answer 이벤트를 발행합니다.
+- 서버에서는 answer 이벤트를 수신하여 응답을 합니다.
+
+> Request
+>
+> - 설명
+
+| 필드명      | 데이터 타입  | 정의                                         |
+| ----------- | ------------ | -------------------------------------------- |
+| chatbot_id  | int          | 챗봇 PK                                      |
+| message     | string       | 사용자 메시지 입력내용                       |
+| sender_type | string       | 전송 주체<br />- USER: 사람<br />- BOT: 챗봇 |
+| chatroom_id | string(uuid) | 채팅방 PK                                    |
+| user_id     | string(uuid) | 사용자 PK                                    |
+
+> - 예시 요청 데이터
+
+```json
+{
+  "chatbot_id": 1,
+  "message": "퀴즈1 사용자 대답 메시지",
+  "sender_type": "USER",
+  "chatroom_id": "{uuid}",
+  "user_id": "{uuid}"
+}
+```
+
+> Response
+>
+> - 설명
+
+| 필드명                | 데이터 타입  | 정의                                                                            |
+| --------------------- | ------------ | ------------------------------------------------------------------------------- |
+| current_distance      | int          | 챗봇과의 사이거리                                                               |
+| heart_life            | int          | 분홍 하트개수                                                                   |
+| chatroom_id           | string(uuid) | 채팅방 PK                                                                       |
+| chatbot_name          | string       | 챗봇 이름                                                                       |
+| chatbot_id            | int          | 챗봇 PK                                                                         |
+| message               | string       | 퀴즈1 사용자 대답 리액션 메시지                                                 |
+| score                 | int          | 퀴즈1 사용자 대답 평가 점수<br />- 1: 긍정<br />- 0: 부정                       |
+| chatbot_profile_image | string(url)  | 챗봇 프로필 이미지 url                                                          |
+| reaction_image        | string(url)  | 리액션 이미지<br />- score:1 일때 positive.png<br />- score:0 일때 negative.png |
+| user_id               | string(uuid) | 유저 PK                                                                         |
+| turn_count            | Int          | 앞으로 챗봇의 대화 가능 횟수                                                    |
+
+> - 예시 응답 데이터
+
+```json
+{
+  "chatbot_id": 1,
+  "chatbot_name": "투닥이",
+  "message": "퀴즈1 리액션 메시지",
+  "user_id": "{uuid}",
+  "sender_type": "BOT",
+  "chatroom_id": "{uuid}",
+  "score": 1,
+  "chatbot_profile_image": "{S3-URL}/chatbots/{chatbot_id}/profile.png",
+  "reaction_image": "{S3-URL}/chatbots/{chatbot_id}/reactions/positive.png",
+  "heart_life": 10,
+  "current_distance": 10,
+  "turn_count": 0
+}
+```
+
+<br>
+
+- 마지막퀴즈(5번째)일 경우에는 사용자답변에 대한 리액션을 하지 않고 고정텍스트메시지로 응답후 채팅을 종료하도록합니다.
+
+> Request
+>
+> - 예시 요청 데이터
+
+```json
+{
+  "chatbot_id": 1,
+  "message": "퀴즈5 사용자 대답",
+  "sender_type": "USER",
+  "chatroom_id": "{uuid}",
+  "user_id": "{uuid}"
+}
+```
+
+> Response
+>
+> - 예시 응답 데이터
+
+```json
+{
+  "chatbot_id": 1,
+  "chatbot_name": "투닥이",
+  "message": "오늘 너랑 얘기해서 정말 즐거웠어. {user_nickname}! 저기… 사실 너에게 하고 싶은 말이 있어서…편지로 써봤는데, 혹시 받아줄래?",
+  "user_id": "{uuid}",
+  "sender_type": "BOT",
+  "chatroom_id": "{uuid}",
+  "score": 1,
+  "chatbot_profile_image": "{S3-URL}/chatbots/{chatbot_id}/profile.png",
+  "heart_life": 5,
+  "current_distance": 5,
+  "turn_count": 0
+}
+```
+
+### `quiz` 이벤트
+
+- 퀴즈이벤트는 서버에서 발행하여 클라이언트(사용자)에게 요청을 합니다.
+- 사용자는 quiz 이벤트를 수신함으로써 챗봇으로 답변을 받았음을 확인하기 위한 용도입니다.
+
+### `policy_error` 이벤트
+
+- 사용자 답변에 부적절한 키워드나 비속어/프롬프트 탈취/ 비속어를 불러일으키는 경우에 이벤트 발생합니다.
+- 이벤트를 수신하게되면 '부적절한 메시지가 감지되었어요' 토스트 UI가 나옵니다.
+
+> Request
+
+```json
+{
+  "chatbot_id": 1,
+  "message": "퀴즈1 사용자 대답 메시지(정책위반 키워드 및 문맥보유)",
+  "sender_type": "USER",
+  "chatroom_id": "{uuid}",
+  "user_id": "{uuid}"
+}
+```
+
+> Response - policy_error 이벤트 발생
+
+```json
+{
+  "message": "부적절한 메시지가 감지되었어요"
+}
+```
 
 ---
 
