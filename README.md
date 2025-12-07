@@ -35,6 +35,18 @@ T와 F 사이엔, 거리가 있다...? 📏 나 T나?? team
 
 **`F와의 거리는`** T 성향을 가진 사람들을 위한 감정 공감 시뮬레이션 서비스입니다. F 캐릭터들과의 대화를 통해 내 공감거리를 직접 확인해보세요!
 
+
+- [📝 F와의 사이거리 - 서비스 소개서 ](https://www.figma.com/deck/SD6UF09n5KP2CCGeGRwzgb/F%EC%99%80%EC%9D%98-%EA%B1%B0%EB%A6%AC---%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%86%8C%EA%B0%9C%EC%84%9C?kind=deck&node-id=1-4682) 에서 자세히 확인할 수 있습니다!
+
+<br>
+
+> 프로젝트 전체 서비스 아키텍쳐
+
+<img width="2000" height="1000" alt="image" src="https://github.com/user-attachments/assets/938b1b90-fc2b-4083-b926-2494245bbbc1" />
+
+
+<br>
+
 <br>
 
 > 프로젝트 시연영상
@@ -52,6 +64,7 @@ T와 F 사이엔, 거리가 있다...? 📏 나 T나?? team
 - Cloud: ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
 - EC2, ALB(Application Load Balancer), Route53, ACM, S3, VPC
 - CI/CD: ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white) ![PM2](https://img.shields.io/badge/PM2-%232B037A?style=for-the-badge&logo=PM2&logoColor=white)
+
 
 ---
 
